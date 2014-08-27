@@ -2,17 +2,17 @@
 
 #include <vector>
 
-#include "imu_calib/common.h"
+#include "imu_tk/common.h"
 
-namespace imu_calib
+namespace imu_tk
 {
   void importMatlabData( const char *filename,
-                         std::vector< imu_calib::TriadData > &data );
+                         std::vector< imu_tk::TriadData > &data );
   void importMatlabData( const char *filename,
-                         std::vector< imu_calib::TriadData > &data0,
-                         std::vector< imu_calib::TriadData > &data1 );
+                         std::vector< imu_tk::TriadData > &data0,
+                         std::vector< imu_tk::TriadData > &data1 );
   void importMatlabData( const char *filename,
-                         std::vector< imu_calib::TriadData > &data0,
-                         std::vector< imu_calib::TriadData > &data1,
-                         std::vector< imu_calib::TriadData > &data2 ); 
+                         std::vector< imu_tk::TriadData > &data0,
+                         std::vector< imu_tk::TriadData > &data1,
+                         std::vector< imu_tk::TriadData > &data2 ); 
 }

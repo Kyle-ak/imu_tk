@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <Eigen/Core>
 
-namespace imu_calib
+namespace imu_tk
 {
  class TriadData
  {

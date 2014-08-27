@@ -1,4 +1,4 @@
-#include "imu_calib/dataset_utils.h"
+#include "imu_tk/dataset_utils.h"
 
 
 #include <iostream>
@@ -11,8 +11,8 @@
 
 using namespace std;
 
-void imu_calib::importMatlabData ( const char *filename, 
-                                   std::vector< imu_calib::TriadData > &data )
+void imu_tk::importMatlabData ( const char *filename, 
+                                std::vector< imu_tk::TriadData > &data )
 {
   data.clear();
   
@@ -37,9 +37,9 @@ void imu_calib::importMatlabData ( const char *filename,
   }
 }
 
-void imu_calib::importMatlabData ( const char *filename,
-                                   std::vector< imu_calib::TriadData > &data0,
-                                   std::vector< imu_calib::TriadData > &data1 )
+void imu_tk::importMatlabData ( const char *filename,
+                                std::vector< imu_tk::TriadData > &data0,
+                                std::vector< imu_tk::TriadData > &data1 )
 {
   data0.clear();
   data1.clear();
@@ -66,10 +66,10 @@ void imu_calib::importMatlabData ( const char *filename,
   }
 }
 
-void imu_calib::importMatlabData ( const char *filename,
-                                   std::vector< imu_calib::TriadData > &data0,
-                                   std::vector< imu_calib::TriadData > &data1,
-                                   std::vector< imu_calib::TriadData > &data2 )
+void imu_tk::importMatlabData ( const char *filename,
+                                std::vector< imu_tk::TriadData > &data0,
+                                std::vector< imu_tk::TriadData > &data1,
+                                std::vector< imu_tk::TriadData > &data2 )
 {
   data0.clear();
   data1.clear();
