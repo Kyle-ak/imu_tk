@@ -6,93 +6,95 @@
 #include <string>
 #include <cstdio>
 
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-
 using namespace std;
 
 void imu_tk::importMatlabData ( const char *filename, 
-                                std::vector< imu_tk::TriadData > &data )
+                                std::vector< TriadData > &samples,
+                                TimestampUnit unit )
 {
-  data.clear();
+  samples.clear();
   
   string line;
   ifstream infile;
-  uint64_t ts;
-  double d[3];
+  double ts, d[3];
   
   infile.open ( filename );
   if (infile.is_open()) 
   { 
     char format[266];
-    sprintf(format,"%%%s %%lf %%lf %%lf ;", SCNu64);
+    sprintf(format,"%%lf %%lf %%lf %%lf ;");
     while ( getline (infile,line) )
     {
-      int res = sscanf (line.data(), format,&ts, &d[0], &d[1], &d[2]);
+      int res = sscanf (line.data(), format, &ts, &d[0], &d[1], &d[2]);
       if ( res != 4 )
         break;
-      data.push_back( TriadData(ts, d ));
+      ts /= unit;
+      samples.push_back( TriadData(ts, d ));
     }
     infile.close();
   }
 }
 
 void imu_tk::importMatlabData ( const char *filename,
-                                std::vector< imu_tk::TriadData > &data0,
-                                std::vector< imu_tk::TriadData > &data1 )
+                                std::vector< TriadData > &samples0,
+                                std::vector< TriadData > &samples1,
+                                TimestampUnit unit )
 {
-  data0.clear();
-  data1.clear();
+  samples0.clear();
+  samples1.clear();
   
   string line;
   ifstream infile;
-  uint64_t ts;
-  double d[6];
+  double ts, d[6];
   
   infile.open ( filename );
   if (infile.is_open()) 
   { 
     char format[266];
-    sprintf(format,"%%%s %%lf %%lf %%lf %%lf %%lf %%lf ;", SCNu64);
+    sprintf(format,"%%lf %%lf %%lf %%lf %%lf %%lf %%lf ;");
     while ( getline (infile,line) )
     {
-      int res = sscanf (line.data(), format,&ts, &d[0], &d[1], &d[2], &d[3], &d[4], &d[5]);
+      int res = sscanf (line.data(), format, &ts, &d[0], &d[1], &d[2],
+                        &d[3], &d[4], &d[5]);
       if ( res != 7 )
         break;
-      data0.push_back( TriadData(ts, d ));
-      data1.push_back( TriadData(ts, d + 3 ));
+      ts /= unit;
+      samples0.push_back( TriadData(ts, d ));
+      samples1.push_back( TriadData(ts, d + 3 ));
     }
     infile.close();
   }
 }
 
 void imu_tk::importMatlabData ( const char *filename,
-                                std::vector< imu_tk::TriadData > &data0,
-                                std::vector< imu_tk::TriadData > &data1,
-                                std::vector< imu_tk::TriadData > &data2 )
+                                std::vector< TriadData > &samples0,
+                                std::vector< TriadData > &samples1,
+                                std::vector< TriadData > &samples2,
+                                TimestampUnit unit )
 {
-  data0.clear();
-  data1.clear();
-  data2.clear();
+  samples0.clear();
+  samples1.clear();
+  samples2.clear();
   
   string line;
   ifstream infile;
-  uint64_t ts;
-  double d[9];
+  double ts, d[9];
   
   infile.open ( filename );
   if (infile.is_open()) 
   { 
     char format[266];
-    sprintf(format,"%%%s %%lf %%lf %%lf %%lf %%lf %%lf %%lf %%lf %%lf ;", SCNu64);
+    sprintf(format,"%%lf %%lf %%lf %%lf %%lf %%lf %%lf %%lf %%lf %%lf ;");
     while ( getline (infile,line) )
     {
-      int res = sscanf (line.data(), format,&ts, &d[0], &d[1], &d[2], &d[3], &d[4], &d[5], &d[6], &d[7], &d[8]);
+      int res = sscanf (line.data(), format, &ts, &d[0], &d[1], &d[2], 
+                        &d[3], &d[4], &d[5], &d[6], &d[7], &d[8]);
       if ( res != 10 )
         break;
-      data0.push_back( TriadData(ts, d ));
-      data1.push_back( TriadData(ts, d + 3 ));
-      data2.push_back( TriadData(ts, d + 6 ));
+      ts /= unit;
+      samples0.push_back( TriadData(ts, d ));
+      samples1.push_back( TriadData(ts, d + 3 ));
+      samples2.push_back( TriadData(ts, d + 6 ));
     }
     infile.close();
   }

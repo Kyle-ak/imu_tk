@@ -6,14 +6,15 @@ cmake_policy(SET CMP0015 NEW)
 # Change to "Debug" to enable debug symbols
 set(CMAKE_BUILD_TYPE "Debug")
 
-set(STD_FLAGS_DEBUG "-Wall -g -D__STDC_CONSTANT_MACROS -pthread")
-set(STD_FLAGS_RELEASE "-Wall -D__STDC_CONSTANT_MACROS -pthread -export-dynamic -march=nocona -mfpmath=sse -ftree-vectorize -fextended-identifiers -O3")
+message("${CMAKE_CXX_FLAGS_RELEASE}")
 
+find_package(Boost REQUIRED)  
 find_package(Eigen REQUIRED)
 find_package(Ceres REQUIRED)
 
 include_directories(./include
                     /usr/include
+                    ${Boost_INCLUDE_DIRS}
                     ${EIGEN_INCLUDE_DIR}
                     ${CERES_INCLUDE_DIRS})
 
