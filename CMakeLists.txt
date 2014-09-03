@@ -3,8 +3,9 @@ project(imu_toolkit)
 cmake_minimum_required (VERSION 2.8) 
 cmake_policy(SET CMP0015 NEW)
 
-# Change to "Debug" to enable debug symbols
-set(CMAKE_BUILD_TYPE "Debug")
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release")
+endif(NOT DEFINED CMAKE_BUILD_TYPE) 
 
 message("${CMAKE_CXX_FLAGS_RELEASE}")
 
@@ -18,6 +19,7 @@ include_directories(./include
                     ${EIGEN_INCLUDE_DIR}
                     ${CERES_INCLUDE_DIRS})
 
+                   
 aux_source_directory( src IMU_TOOLKIT_SRC )
 
 add_library(imu_toolkit STATIC ${IMU_TOOLKIT_SRC})

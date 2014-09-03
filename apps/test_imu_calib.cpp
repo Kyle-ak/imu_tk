@@ -2,6 +2,8 @@
 
 #include "imu_tk/dataset_utils.h"
 #include "imu_tk/calibration.h"
+#include "imu_tk/filters.h"
+#include "imu_tk/integration.h"
 #include "imu_tk/visualization.h"
 
 using namespace std;
@@ -10,38 +12,35 @@ using namespace Eigen;
 
 int main(int argc, char** argv)
 {
-  if( argc < 2 )
+  if( argc < 3 )
     return -1;
-  
 
-  vector< TriadData > acc_data, gyro_data;
+  vector< TriadData<double> > acc_data, gyro_data;
   
-  cout<<"Importing IMU data from the Matlab matrix file : "<< argv[1]<<endl;
+  cout<<"Importing IMU data from the Matlab matrix file : "<< argv[1]<<endl;  
+  importAsciiData( argv[1], acc_data, imu_tk::TIMESTAMPUNIT_SEC );
+  cout<<"Importing IMU data from the Matlab matrix file : "<< argv[2]<<endl;  
+  importAsciiData( argv[2], gyro_data, imu_tk::TIMESTAMPUNIT_SEC  );
   
-  importMatlabData( argv[1], acc_data, gyro_data );
+  Eigen::Matrix3d rot_res;
+  integrateGyroInterval( gyro_data, rot_res, 0.01 );
+  std::cout<<std::endl<<rot_res<<std::endl;
   
-  Array3d variance = dataVariance( acc_data, DataInterval( 0, 3000) );
-  double magnitude_th = (variance*variance).sum();
-  std::vector< imu_tk::DataInterval > statc_intervals;
-  
-  cout<<statc_intervals.size()<<endl;
+  MultiPosCalibration<double> mp_calib;
+  mp_calib.setAccInitBias ( Vector3d(32768, 32768, 32768) );
+//   mp_calib.setAccInitBias( Vector3d(33123, 33276, 32360) );
+  mp_calib.setGravityMagnitude(9.81744);
+  mp_calib.enableVerboseOutput(true);
+  mp_calib.calibrateAccGyro(acc_data, gyro_data );
+  mp_calib.getAccCalib().save("test.calib");
   
 //   for( int i = 0; i < acc_data.size(); i++)
 //   {
 //     cout<<acc_data[i].timestamp()<<" "
-//         <<acc_data[i].x()<<" "<<acc_data[i].y()<<" "<<acc_data[i].z()<<" "
-//         <<gyro_data[i].x()<<" "<<gyro_data[i].y()<<" "<<gyro_data[i].z()<<endl;
+  //         <<acc_data[i].x()<<" "<<acc_data[i].y()<<" "<<acc_data[i].z()<<" "
+  //         <<gyro_data[i].x()<<" "<<gyro_data[i].y()<<" "<<gyro_data[i].z()<<endl;
 //   }
 //   cout<<"Read "<<acc_data.size()<<" tuples"<<endl;
-  
-  PlotPtr plot = createPlot();
-  
-  for (int i = 1; i < 10; i++)
-  {
-    staticIntervalsDetector ( acc_data, i*magnitude_th, statc_intervals );
-    plotIntervals( plot, acc_data, statc_intervals ) ;
-    waitForKey();
-  }
   
   return 0;
 }

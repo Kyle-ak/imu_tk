@@ -2,6 +2,8 @@
 
 #include "imu_tk/gnuplot_i.h"
 
+using namespace imu_tk;
+
 class imu_tk::Plot
 {
 public:
@@ -13,59 +15,76 @@ private:
   gnuplot_ctrl *hplot_;
 };
 
-imu_tk::PlotPtr imu_tk::createPlot()
+imu_tk::PlotPtr createPlot()
 {
-  return PlotPtr ( new Plot() );
+  return PlotPtr ( new imu_tk::Plot() );
 }
 
-void imu_tk::waitForKey()
+void waitForKey()
 {
   while (getchar()!='\n');  
 }
 
-void imu_tk::plotSamples ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData >& samples )
+template <typename _T> 
+  void plotSamples ( imu_tk::PlotPtr plot, const std::vector< TriadData<_T> >& samples, 
+                     DataInterval range )
 {
-  int n_pts = samples.size();
-  double ts[n_pts], x[n_pts], y[n_pts], z[n_pts];
-  
+  range = checkInterval( samples, range );
+  int n_pts = range.end_idx - range.start_idx + 1;;
+  std::vector<double> ts(n_pts), x(n_pts), y(n_pts), z(n_pts);
+    
   gnuplot_resetplot(plot->getHandle());
   gnuplot_setstyle(plot->getHandle(), "lines") ;
   
-  double base_time = samples[0].timestamp();
-  for( int i = 0; i < n_pts; i++)
+  _T base_time = samples[0].timestamp();
+  for( int i = range.start_idx; i <= range.end_idx; i++)
   {
-    ts[i] = samples[i].timestamp() - base_time;
-    x[i] = samples[i].x();
-    y[i] = samples[i].y();
-    z[i] = samples[i].z();
+    ts[i] = double(samples[i].timestamp() - base_time);
+    x[i] = double(samples[i].x());
+    y[i] = double(samples[i].y());
+    z[i] = double(samples[i].z());
   }  
 
-  gnuplot_plot_xy(plot->getHandle(), ts, x, n_pts, "x") ;
-  gnuplot_plot_xy(plot->getHandle(), ts, y, n_pts, "y") ;
-  gnuplot_plot_xy(plot->getHandle(), ts, z, n_pts, "z") ;
+  gnuplot_plot_xy(plot->getHandle(), ts.data(), x.data(), n_pts, "x") ;
+  gnuplot_plot_xy(plot->getHandle(), ts.data(), y.data(), n_pts, "y") ;
+  gnuplot_plot_xy(plot->getHandle(), ts.data(), z.data(), n_pts, "z") ;
 }
 
-void imu_tk::plotIntervals ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData >& samples, const std::vector< imu_tk::DataInterval >& intervals )
+template <typename _T> 
+  void plotIntervals ( imu_tk::PlotPtr plot, const std::vector< TriadData<_T> >& samples, 
+                       const std::vector< DataInterval >& intervals,
+                       DataInterval range )
 {
-  int n_pts = samples.size(), n_intervals = intervals.size();
-  double ts[n_pts], intervals_plot[n_pts];
+  range = checkInterval( samples, range );
+  int n_pts = range.end_idx - range.start_idx + 1, 
+              n_intervals = intervals.size();
+  std::vector<double> ts(n_pts), intervals_plot(n_pts);
   
-  plotSamples (plot, samples );
-  double max = 0;
-  for( int i = 0; i < n_pts; i++ )
+  plotSamples (plot, samples, range );
+  double max = 0, mean = 0;
+  for( int i = range.start_idx; i <= range.end_idx; i++)
   {
-    if( samples[i].x() > max ) max = samples[i].x();
-    if( samples[i].y() > max ) max = samples[i].y();
-    if( samples[i].z() > max ) max = samples[i].z();    
+    if( double(samples[i].x()) > max ) max = double(samples[i].x());
+    if( double(samples[i].y()) > max ) max = double(samples[i].y());
+    if( double(samples[i].z()) > max ) max = double(samples[i].z());
+    
+    mean += (double(samples[i].x()) + double(samples[i].y()) + double(samples[i].z()))/3;
   }
   
-  double step_h = max/2, val = 0;
+  mean /= n_pts;
+  max -= mean;
+  double step_h = mean + max/2, val = 0;
   int interval_idx = 0;
- 
-  double base_time = samples[0].timestamp();
-  for( int i = 0; i < n_pts; i++ )
+  for( ; interval_idx < n_intervals; interval_idx++ )
   {
-    ts[i] = samples[i].timestamp() - base_time;
+    if (intervals[interval_idx].start_idx >= range.start_idx )
+      break;
+  }
+ 
+  _T base_time = samples[0].timestamp();
+  for( int i = range.start_idx; i <= range.end_idx; i++)
+  {
+    ts[i] = double(samples[i].timestamp() - base_time);
     if( interval_idx < n_intervals)
     {
       if( i == intervals[interval_idx].start_idx )
@@ -78,5 +97,5 @@ void imu_tk::plotIntervals ( imu_tk::PlotPtr plot, const std::vector< imu_tk::Tr
     }
     intervals_plot[i] = val;
   }
-  gnuplot_plot_xy(plot->getHandle(), ts, intervals_plot, n_pts, "intervals") ;
+  gnuplot_plot_xy(plot->getHandle(), ts.data(), intervals_plot.data(), n_pts, "intervals") ;
 }
