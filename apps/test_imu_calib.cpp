@@ -22,24 +22,23 @@ int main(int argc, char** argv)
   cout<<"Importing IMU data from the Matlab matrix file : "<< argv[2]<<endl;  
   importAsciiData( argv[2], gyro_data, imu_tk::TIMESTAMPUNIT_SEC  );
   
-  Eigen::Matrix3d rot_res;
-  integrateGyroInterval( gyro_data, rot_res, 0.01 );
-  std::cout<<std::endl<<rot_res<<std::endl;
-  
-  MultiPosCalibration<double> mp_calib;
-  mp_calib.setNumInitSamples(5000);
   
   CalibratedTriad<double> init_acc_calib, init_gyro_calib;
   init_acc_calib.setBias( Vector3d(32768, 32768, 32768) );
   init_gyro_calib.setScale( Vector3d(1.0/6258.0, 1.0/6258.0, 1.0/6258.0) );
   
+  MultiPosCalibration<double> mp_calib;
+    
+  mp_calib.setNumInitSamples(5000);
   mp_calib.setInitAccCalibration( init_acc_calib );
   mp_calib.setInitGyroCalibration( init_gyro_calib );  
   mp_calib.setGravityMagnitude(9.81744);
   mp_calib.enableVerboseOutput(true);
+  mp_calib.enableAccUseMeans(false);
   //mp_calib.setGyroDataPeriod(0.01);
   mp_calib.calibrateAccGyro(acc_data, gyro_data );
-  mp_calib.getAccCalib().save("test.calib");
+  mp_calib.getAccCalib().save("test_acc.calib");
+  mp_calib.getGyroCalib().save("test_acc.calib");
   
 //   for( int i = 0; i < acc_data.size(); i++)
 //   {

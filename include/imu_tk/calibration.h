@@ -157,6 +157,7 @@ public:
   const CalibratedTriad<_T>& initGyroCalibration(){ return init_gyro_calib_; };
   bool accUseMeans() const { return acc_use_means_; };
   _T gyroDataPeriod() const{ return gyro_dt_; };
+  bool optimizeGyroBias() const { return optimize_gyro_bias_; };
   bool verboseOutput() const { return verbose_output_; };
   
   void setGravityMagnitude( _T g ){ g_mag_ = g; };
@@ -166,6 +167,7 @@ public:
   void setInitGyroCalibration( CalibratedTriad<_T> &init_calib ){ init_gyro_calib_ = init_calib; };
   void enableAccUseMeans ( bool enabled ){ acc_use_means_ = enabled; };
   void setGyroDataPeriod( _T dt ){ gyro_dt_ = dt; };
+  bool enableGyroBiasOptimization( bool enabled  ) { optimize_gyro_bias_ = enabled; };
   void enableVerboseOutput( bool enabled ){ verbose_output_ = enabled; };
   
   bool calibrateAcc( const std::vector< TriadData<_T> > &acc_samples );
@@ -185,6 +187,7 @@ private:
   int interval_n_samples_;
   bool acc_use_means_;
   _T gyro_dt_;
+  bool optimize_gyro_bias_;
   std::vector< DataInterval<_T> > min_cost_static_intervals_;
   CalibratedTriad<_T> init_acc_calib_, init_gyro_calib_;
   CalibratedTriad<_T> acc_calib_, gyro_calib_;
