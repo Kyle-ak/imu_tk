@@ -27,10 +27,17 @@ int main(int argc, char** argv)
   std::cout<<std::endl<<rot_res<<std::endl;
   
   MultiPosCalibration<double> mp_calib;
-  mp_calib.setAccInitBias ( Vector3d(32768, 32768, 32768) );
-//   mp_calib.setAccInitBias( Vector3d(33123, 33276, 32360) );
+  mp_calib.setNumInitSamples(5000);
+  
+  CalibratedTriad<double> init_acc_calib, init_gyro_calib;
+  init_acc_calib.setBias( Vector3d(32768, 32768, 32768) );
+  init_gyro_calib.setScale( Vector3d(1.0/6258.0, 1.0/6258.0, 1.0/6258.0) );
+  
+  mp_calib.setInitAccCalibration( init_acc_calib );
+  mp_calib.setInitGyroCalibration( init_gyro_calib );  
   mp_calib.setGravityMagnitude(9.81744);
   mp_calib.enableVerboseOutput(true);
+  //mp_calib.setGyroDataPeriod(0.01);
   mp_calib.calibrateAccGyro(acc_data, gyro_data );
   mp_calib.getAccCalib().save("test.calib");
   

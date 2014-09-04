@@ -59,6 +59,31 @@ public:
  
   ~CalibratedTriad(){};
   
+  inline _T misYZ() const { return mis_yz_; };
+  inline _T misZY() const { return mis_zy_; };
+  inline _T misZX() const { return mis_zx_; };
+  inline _T misXZ() const { return mis_xz_; };
+  inline _T misXY() const { return mis_xy_; };
+  inline _T misYX() const { return mis_yx_; };
+
+  inline _T scaleX() const { return s_x_; };
+  inline _T scaleY() const { return s_y_; };
+  inline _T scaleZ() const { return s_z_; };
+      
+  inline _T biasX() const { return b_x_; };
+  inline _T biasY() const { return b_y_; };
+  inline _T biasZ() const { return b_z_; };
+  
+  inline const Eigen::Matrix< _T, 3 , 3>& getMisalignmentMatrix() const { return mis_mat_; };
+  inline const Eigen::Matrix< _T, 3 , 3>& getScaleMatrix() const { return scale_mat_; };
+  inline const Eigen::Matrix< _T, 3 , 1>& getBiasVector() const { return bias_vec_; };
+    
+  inline void setScale( const Eigen::Matrix< _T, 3 , 1> &s_vec ) { s_x_ = s_vec(0); s_y_ = s_vec(1); s_z_ = s_vec(2); };
+  inline void setBias( const Eigen::Matrix< _T, 3 , 1> &b_vec ) { b_x_ = b_vec(0); b_y_ = b_vec(1); b_z_ = b_vec(2); };
+  
+  bool load( std::string filename );
+  bool save( std::string filename ) const;
+
   inline Eigen::Matrix< _T, 3 , 1> normalize( const Eigen::Matrix< _T, 3 , 1> &raw_data )
   {
     return ms_mat_*raw_data;
@@ -69,14 +94,14 @@ public:
     return TriadData<_T>( raw_data.timestamp(), normalize( raw_data.data()) );
   };
   
-  inline Eigen::Matrix< _T, 3 , 1> normalizeUnbias( const Eigen::Matrix< _T, 3 , 1> &raw_data )
+  inline Eigen::Matrix< _T, 3 , 1> unbiasNormalize( const Eigen::Matrix< _T, 3 , 1> &raw_data )
   {
     return ms_mat_*(raw_data - bias_vec_); 
   };
   
-  inline TriadData<_T> normalizeUnbias( const TriadData<_T> &raw_data )
+  inline TriadData<_T> unbiasNormalize( const TriadData<_T> &raw_data )
   {
-    return TriadData<_T>( raw_data.timestamp(), normalizeUnbias( raw_data.data()) );
+    return TriadData<_T>( raw_data.timestamp(), unbiasNormalize( raw_data.data()) );
   };
   
   inline Eigen::Matrix< _T, 3 , 1> unbias( const Eigen::Matrix< _T, 3 , 1> &raw_data )
@@ -88,13 +113,6 @@ public:
   {
     return TriadData<_T>( raw_data.timestamp(), unbias( raw_data.data()) );
   };
-
-  inline const Eigen::Matrix< _T, 3 , 3>& getMisalignmentMatrix() const { return mis_mat_; };
-  inline const Eigen::Matrix< _T, 3 , 3>& getScaleMatrix() const { return scale_mat_; };
-  inline const Eigen::Matrix< _T, 3 , 1>& getBiasVector() const { return bias_vec_; };
-  
-  bool load( std::string filename );
-  bool save( std::string filename ) const;
   
 private:
   // Misalignment parameters
@@ -133,18 +151,21 @@ public:
   ~MultiPosCalibration(){};
   
   _T gravityMagnitede() const { return g_mag_; };
-  Eigen::Matrix<_T, 3, 1> accInitBias() const { return acc_init_bias_; };
   int numInitSamples() const { return n_init_samples_; };
   int intarvalsNumSamples() const { return interval_n_samples_; };
+  const CalibratedTriad<_T>& initAccCalibration(){ return init_acc_calib_; };
+  const CalibratedTriad<_T>& initGyroCalibration(){ return init_gyro_calib_; };
   bool accUseMeans() const { return acc_use_means_; };
   _T gyroDataPeriod() const{ return gyro_dt_; };
   bool verboseOutput() const { return verbose_output_; };
   
   void setGravityMagnitude( _T g ){ g_mag_ = g; };
-  void setAccInitBias ( const Eigen::Matrix<_T, 3, 1> &bias ) { acc_init_bias_ = bias; };
+  void setNumInitSamples( int num ) { n_init_samples_ = num; };
   int setIntarvalsNumSamples( int num ) { interval_n_samples_ = num; };
+  void setInitAccCalibration( CalibratedTriad<_T> &init_calib ){ init_acc_calib_ = init_calib; };
+  void setInitGyroCalibration( CalibratedTriad<_T> &init_calib ){ init_gyro_calib_ = init_calib; };
   void enableAccUseMeans ( bool enabled ){ acc_use_means_ = enabled; };
-  _T setGyroDataPeriod( _T dt ){ gyro_dt_ = dt; };
+  void setGyroDataPeriod( _T dt ){ gyro_dt_ = dt; };
   void enableVerboseOutput( bool enabled ){ verbose_output_ = enabled; };
   
   bool calibrateAcc( const std::vector< TriadData<_T> > &acc_samples );
@@ -159,13 +180,13 @@ public:
 private:
   
   _T g_mag_;
-  Eigen::Matrix<_T, 3, 1> acc_init_bias_;
   const int min_num_intervals_;
   int n_init_samples_;
   int interval_n_samples_;
   bool acc_use_means_;
   _T gyro_dt_;
-  std::vector< DataInterval > min_cost_static_intervals_;
+  std::vector< DataInterval<_T> > min_cost_static_intervals_;
+  CalibratedTriad<_T> init_acc_calib_, init_gyro_calib_;
   CalibratedTriad<_T> acc_calib_, gyro_calib_;
   std::vector< TriadData<_T> > calib_acc_samples_, calib_gyro_samples_;
   

@@ -7,31 +7,18 @@
 namespace imu_tk
 {
 
-struct DataInterval
+template <typename _T = double> struct DataInterval
 {
 public:
   DataInterval() {};
-  DataInterval ( int idx0, int idx1, double ts0, double ts1 ) :
+  DataInterval ( int idx0, int idx1, _T ts0, _T ts1 ) :
     start_idx ( idx0 ), end_idx ( idx1 ),start_ts ( ts0 ), end_ts ( ts1 ) {};
   DataInterval ( int idx0, int idx1 ) :
-    start_idx ( idx0 ), end_idx ( idx1 ),start_ts ( -1 ), end_ts ( -1 ) {};
+    start_idx ( idx0 ), end_idx ( idx1 ),start_ts ( _T(-1) ), end_ts ( _T(-1) ) {};
   int start_idx, end_idx;
-  double start_ts, end_ts;
+  _T start_ts, end_ts;
 };
-    
-//     template< typename NewTypeT >
-//     ParamVector( const ParamVector< NewTypeT > &rhs )
-//     {
-//         // convert
-//     }
-// 
-//     template < typename NewTypeT >
-//     ParamVector& operator=( const ParamVector< NewTypeT > &rhs )
-//     {
-//         // do some conversion thigns
-//         return *this;
-//     }
-//     
+
 template <typename _T = double> class TriadData
 {
 public:
@@ -62,21 +49,17 @@ public:
   };
  
   // Supporting coercion using member template constructor.
-  // This is not a copy constructor, but behaves similarly.
   template< typename _newT >
-    TriadData( const TriadData<_newT> &o )
-  { 
-    timestamp_ = _T(o.timestamp_);
-    data_ = o.data_.template cast<_T>();
-  };
+    TriadData( const TriadData<_newT> &o ) :
+    timestamp_(_T(o.timestamp())), data_(o.data().template cast<_T>())
+  {};
   
   // Supporting coercion using member template assignment operator.
-  // This is not the copy assignment operator, but works similarly.
   template< typename _newT >
     TriadData & operator = (const TriadData<_newT> &o )
   {
-    timestamp_ = _T(o.timestamp_);
-    data_ = o.data_;
+    timestamp_ = _T(o.timestamp());
+    data_ = o.data().template cast<_T>();
     return *this;
   };
     
@@ -117,14 +100,14 @@ template <typename _T>
 
 
 template <typename _T> 
-  DataInterval checkInterval( const std::vector< TriadData<_T> > &samples, 
-                              const DataInterval &interval );
+  DataInterval<_T> checkInterval( const std::vector< TriadData<_T> > &samples, 
+                                  const DataInterval<_T> &interval );
 template <typename _T> 
   Eigen::Matrix< _T, 3, 1> dataMean ( const std::vector< TriadData<_T> > &samples, 
-                                      const DataInterval &interval = DataInterval ( -1, -1 ) );
+                                      const DataInterval<_T> &interval = DataInterval<_T> (-1, -1) );
 template <typename _T>
   Eigen::Matrix< _T, 3, 1> dataVariance ( const std::vector< TriadData<_T> > &samples, 
-                                          const DataInterval &interval = DataInterval ( -1, -1 ) );
+                                          const DataInterval<_T> &interval = DataInterval<_T> (-1, -1) );
 
 /**
   * @brief If the flag only_means is set to false, for each interval 
@@ -132,26 +115,28 @@ template <typename _T>
   *        (samples) the first interval_n_samps samples, and store them 
   *        in the vector output vector extracted_samples. If the flag only_means
   *        is set to true, extract for each interval only the local mean, computed 
-  *        in a interval of size interval_n_samps samples.
+  *        in interval with size at least interval_n_samps samples.
   *        Only intervals with at least interval_n_samps samples are considered.
   * 
   * @param samples Input 3D signal
   * @param intervals Input intervals vector
   * @param extracted_samples Output signal that contains the extracted samples
+  * @param extracted_intervals Output intervals vector with all the used intervals, i.e. 
+  *                            intervals with size at least interval_n_samps samples
   * @param interval_n_samps Number of samples to be stracted from each interval (or 
   *                         interval size to be used to compute the local mean if
   *                         only_means is set to true)
   * @param only_means If true, extract for each interval only the local mean, computed 
-  *                   in a interval of size interval_n_samps samples. The timestamp is
+  *                   in intervals with size at least interval_n_samps samples. The timestamp is
   *                   the one of the center of the interval.
   * 
-  * @return The number of valid intervals, i.e. intervals with at least interval_n_samps.
   */
 template <typename _T> 
-  int extractIntervalsSamples ( const std::vector< TriadData<_T> > &samples,
-                                const std::vector< DataInterval > &intervals,
-                                std::vector< TriadData<_T> > &extracted_samples,
-                                int interval_n_samps = 100, bool only_means = false );
+  void extractIntervalsSamples ( const std::vector< TriadData<_T> > &samples,
+                                 const std::vector< DataInterval<_T> > &intervals,
+                                 std::vector< TriadData<_T> > &extracted_samples,
+                                 std::vector< DataInterval<_T> > &extracted_intervals,
+                                 int interval_n_samps = 100, bool only_means = false );
 
 /* Implementations */
 
@@ -168,22 +153,22 @@ template <typename _T>
 }
 
 template <typename _T>
-  DataInterval checkInterval( const std::vector< TriadData<_T> > &samples, 
-                              const DataInterval &interval )
+  DataInterval<_T> checkInterval( const std::vector< TriadData<_T> > &samples, 
+                                  const DataInterval<_T> &interval )
 {
   int start_idx = interval.start_idx, end_idx = interval.end_idx;
   if( start_idx < 0) start_idx = 0;
   if( end_idx < start_idx ) end_idx = samples.size() - 1;
   
-  return DataInterval( start_idx, end_idx, 
-                       samples[start_idx].timestamp(), samples[end_idx].timestamp() );
+  return DataInterval<_T>( start_idx, end_idx, 
+                           samples[start_idx].timestamp(), samples[end_idx].timestamp() );
 }
 
 template <typename _T>
   Eigen::Matrix< _T, 3, 1> dataMean( const std::vector< TriadData<_T> >& samples, 
-                              const DataInterval& interval )
+                                     const DataInterval<_T>& interval )
 {
-  DataInterval rev_interval =  checkInterval( samples, interval );
+  DataInterval<_T> rev_interval =  checkInterval( samples, interval );
   int n_samp = rev_interval.end_idx - rev_interval.start_idx + 1;
   Eigen::Matrix< _T, 3, 1> mean(0, 0, 0);
   
@@ -197,9 +182,9 @@ template <typename _T>
 
 template <typename _T>
   Eigen::Matrix< _T, 3, 1> dataVariance( const std::vector< TriadData<_T> >& samples, 
-                                  const DataInterval& interval )
+                                  const DataInterval<_T>& interval )
 {
-  DataInterval rev_interval =  checkInterval( samples, interval );
+  DataInterval<_T> rev_interval =  checkInterval( samples, interval );
   int n_samp = rev_interval.end_idx - rev_interval.start_idx + 1;
   Eigen::Matrix< _T, 3, 1> mean = dataMean( samples, rev_interval );
   
@@ -215,10 +200,11 @@ template <typename _T>
 }
 
 template <typename _T>
-  int extractIntervalsSamples ( const std::vector< TriadData<_T> >& samples, 
-                                const std::vector< DataInterval >& intervals, 
-                                std::vector< TriadData<_T> >& extracted_samples, 
-                                int interval_n_samps, bool only_means )
+  void extractIntervalsSamples ( const std::vector< TriadData<_T> >& samples, 
+                                 const std::vector< DataInterval<_T> >& intervals, 
+                                 std::vector< TriadData<_T> >& extracted_samples, 
+                                 std::vector< DataInterval<_T> > &extracted_intervals,
+                                 int interval_n_samps, bool only_means )
 {
   // Check for valid intervals  (i.e., intervals with at least interval_n_samps samples)
   int n_valid_intervals = 0, n_static_samples;
@@ -232,30 +218,34 @@ template <typename _T>
     n_static_samples = n_valid_intervals;
   else
     n_static_samples = n_valid_intervals*interval_n_samps;
-      
-  extracted_samples.resize(n_static_samples);
-  int s_index = 0;
+  
+  extracted_samples.clear();
+  extracted_intervals.clear();
+  extracted_samples.reserve(n_static_samples);
+  extracted_intervals.reserve(n_valid_intervals);
+  
   // For each valid interval, extract the first interval_n_samps samples
   for( int i = 0; i < intervals.size(); i++)
   {
     if( (intervals[i].end_idx - intervals[i].start_idx) >= interval_n_samps )
     {
+      extracted_intervals.push_back( intervals[i] );
       if( only_means )
       {
-        DataInterval mean_inerval( intervals[i].start_idx, intervals[i].start_idx + interval_n_samps -1 );
+        int interval_size = intervals[i].end_idx - intervals[i].start_idx + 1;
+        DataInterval<_T> mean_inerval( intervals[i].start_idx, intervals[i].end_idx );
         // Take the timestamp centered in the interval where the mean is computed
-        _T timestamp = samples[ intervals[i].start_idx + interval_n_samps/2 -1 ].timestamp();
+        _T timestamp = samples[ intervals[i].start_idx + interval_size/2 ].timestamp();
         Eigen::Matrix< _T, 3, 1> mean_val = dataMean ( samples, mean_inerval );
-        extracted_samples[s_index++] = TriadData<_T>(timestamp, mean_val );
+        extracted_samples.push_back( TriadData<_T>(timestamp, mean_val ) );
       }
       else
       {
         for(int j = intervals[i].start_idx; j < intervals[i].start_idx + interval_n_samps; j++)
-          extracted_samples[s_index++] = samples[j];
+          extracted_samples.push_back( samples[j] );
       }
     }
   }
-  return n_valid_intervals;
 }
 
 }

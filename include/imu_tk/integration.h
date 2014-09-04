@@ -22,11 +22,11 @@ template <typename _T> inline void quatIntegrationStepRK4( const _T quat[4],
 
 template <typename _T> void integrateGyroInterval( const std::vector< TriadData<_T> > &gyro_samples, 
                                                    Eigen::Matrix< _T, 4, 1> &quat_res, _T data_dt = _T(-1),
-                                                   const DataInterval &interval = DataInterval ( -1, -1 ) );
+                                                   const DataInterval<_T> &interval = DataInterval<_T> (-1, -1) );
 
 template <typename _T> void integrateGyroInterval( const std::vector< TriadData<_T> > &gyro_samples, 
                                                    Eigen::Matrix< _T, 3, 3> &rot_res, _T data_dt = _T(-1),
-                                                   const DataInterval &interval = DataInterval ( -1, -1 ) );
+                                                   const DataInterval<_T> &interval = DataInterval<_T> (-1, -1) );
 
 }
 
@@ -36,10 +36,10 @@ template <typename _T>
   static inline void computeOmegaSkew( const Eigen::Matrix< _T, 3, 1> &omega, 
                                        Eigen::Matrix< _T, 4, 4> &skew )
 {
-  skew <<   0,          -omega(0),  -omega(1),  -omega(2),
-            omega(0),   0,           omega(2),  -omega(1),
-            omega(1),  -omega(2),   0,           omega(0),
-            omega(2),   omega(1),  -omega(0),   0;
+  skew <<   _T(0),     -omega(0),  -omega(1),  -omega(2),
+            omega(0),   _T(0),      omega(2),  -omega(1),
+            omega(1),  -omega(2),   _T(0),      omega(0),
+            omega(2),   omega(1),  -omega(0),   _T(0);
 }
 
 template <typename _T> 
@@ -90,15 +90,15 @@ template <typename _T>
 
 template <typename _T> void imu_tk::integrateGyroInterval( const std::vector< TriadData<_T> > &gyro_samples, 
                                                            Eigen::Matrix< _T, 4, 1> &quat_res,
-                                                           _T data_dt, const DataInterval &interval )
+                                                           _T data_dt, const DataInterval<_T> &interval )
 {
-  DataInterval rev_interval =  checkInterval( gyro_samples, interval );
+  DataInterval<_T> rev_interval =  checkInterval( gyro_samples, interval );
 
-  quat_res = Eigen::Matrix< _T, 4, 1>(1.0, 0, 0, 0); // Identity quaternion
+  quat_res = Eigen::Matrix< _T, 4, 1>(_T(1.0), _T(0), _T(0), _T(0)); // Identity quaternion
   
   for( int i = rev_interval.start_idx; i < rev_interval.end_idx; i++)
   {
-    _T dt = ( data_dt > 0)?data_dt:gyro_samples[i+1].timestamp() - gyro_samples[i].timestamp();
+    _T dt = ( data_dt > _T(0))?data_dt:gyro_samples[i+1].timestamp() - gyro_samples[i].timestamp();
     
     quatIntegrationStepRK4( quat_res,
                             gyro_samples[i].data(), 
@@ -110,11 +110,10 @@ template <typename _T> void imu_tk::integrateGyroInterval( const std::vector< Tr
 
 template <typename _T> void imu_tk::integrateGyroInterval( const std::vector< TriadData<_T> >& gyro_samples, 
                                                            Eigen::Matrix< _T, 3 , 3  >& rot_res, 
-                                                           _T data_dt, const DataInterval& interval )
+                                                           _T data_dt, const DataInterval<_T>& interval )
 {
   Eigen::Matrix< _T, 4, 1> quat_res;
   integrateGyroInterval( gyro_samples, quat_res, data_dt, interval );
-  std::cout<<"quat_res = \n"<<quat_res<<std::endl;
   ceres::MatrixAdapter<_T, 1, 3> rot_mat = ceres::ColumnMajorAdapter3x3(rot_res.data());
   ceres::QuaternionToRotation( quat_res.data(), rot_mat );
 }

@@ -16,7 +16,6 @@ namespace imu_tk
   * @param intervals  Ouput detected static intervals
   * @param win_size Size of the sliding window used to compute the local variance magnitude
   * 
-  * @return The number of detected static intervals
   * 
   * 
   * The variance magnitude is a scalar computed in a temporal sliding window of size 
@@ -29,7 +28,7 @@ namespace imu_tk
   * centered in \f$t\f$.
   */
 template <typename _T> 
-  int staticIntervalsDetector ( const std::vector< TriadData<_T> > &samples,
-                                _T threshold, std::vector< DataInterval > &intervals,
-                                int win_size = 101 );
+  void staticIntervalsDetector ( const std::vector< TriadData<_T> > &samples,
+                                 _T threshold, std::vector< DataInterval<_T> > &intervals,
+                                 int win_size = 101 );
 }

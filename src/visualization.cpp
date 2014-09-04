@@ -27,7 +27,7 @@ void waitForKey()
 
 template <typename _T> 
   void plotSamples ( imu_tk::PlotPtr plot, const std::vector< TriadData<_T> >& samples, 
-                     DataInterval range )
+                     DataInterval<_T> range )
 {
   range = checkInterval( samples, range );
   int n_pts = range.end_idx - range.start_idx + 1;;
@@ -52,8 +52,8 @@ template <typename _T>
 
 template <typename _T> 
   void plotIntervals ( imu_tk::PlotPtr plot, const std::vector< TriadData<_T> >& samples, 
-                       const std::vector< DataInterval >& intervals,
-                       DataInterval range )
+                       const std::vector< DataInterval<_T> >& intervals,
+                       DataInterval<_T> range )
 {
   range = checkInterval( samples, range );
   int n_pts = range.end_idx - range.start_idx + 1, 
