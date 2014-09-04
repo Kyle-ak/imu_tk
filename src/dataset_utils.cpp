@@ -10,7 +10,7 @@ using namespace std;
 template <typename _T> 
   void imu_tk::importAsciiData ( const char *filename, 
                                  vector< TriadData<_T> > &samples,
-                                 TimestampUnit unit )
+                                 TimestampUnit unit, DatasetType type )
 {
   samples.clear();
   
@@ -22,7 +22,17 @@ template <typename _T>
   if (infile.is_open()) 
   { 
     char format[266];
-    sprintf(format,"%%lf %%lf %%lf %%lf");
+    switch( type )
+    {
+      case DATASET_COMMA_SEPARATED:
+        sprintf(format,"%%lf, %%lf, %%lf, %%lf");
+        break;
+      case DATASET_SPACE_SEPARATED:
+      default:
+        sprintf(format,"%%lf %%lf %%lf %%lf");
+        break;
+    }
+
     while ( getline (infile,line) )
     {
       int res = sscanf (line.data(), format, &ts, &d[0], &d[1], &d[2]);
@@ -39,7 +49,7 @@ template <typename _T>
   void imu_tk::importAsciiData ( const char *filename,
                                  vector< TriadData<_T> > &samples0,
                                  vector< TriadData<_T> > &samples1,
-                                 TimestampUnit unit )
+                                 TimestampUnit unit, DatasetType type )
 {
   samples0.clear();
   samples1.clear();
@@ -52,7 +62,17 @@ template <typename _T>
   if (infile.is_open()) 
   { 
     char format[266];
-    sprintf(format,"%%lf %%lf %%lf %%lf %%lf %%lf %%lf");
+    switch( type )
+    {
+      case DATASET_COMMA_SEPARATED:
+        sprintf(format,"%%lf, %%lf, %%lf, %%lf, %%lf, %%lf, %%lf");
+        break;
+      case DATASET_SPACE_SEPARATED:
+      default:
+        sprintf(format,"%%lf %%lf %%lf %%lf %%lf %%lf %%lf");
+        break;
+    }
+    
     while ( getline (infile,line) )
     {
       int res = sscanf (line.data(), format, &ts, &d[0], &d[1], &d[2],
@@ -72,7 +92,7 @@ template <typename _T>
                                  vector< TriadData<_T> > &samples0,
                                  vector< TriadData<_T> > &samples1,
                                  vector< TriadData<_T> > &samples2,
-                                 TimestampUnit unit )
+                                 TimestampUnit unit, DatasetType type )
 {
   samples0.clear();
   samples1.clear();
@@ -86,7 +106,17 @@ template <typename _T>
   if (infile.is_open()) 
   { 
     char format[266];
-    sprintf(format,"%%lf %%lf %%lf %%lf %%lf %%lf %%lf %%lf %%lf %%lf");
+    switch( type )
+    {
+      case DATASET_COMMA_SEPARATED:
+        sprintf(format,"%%lf, %%lf, %%lf, %%lf, %%lf, %%lf, %%lf, %%lf, %%lf, %%lf");
+        break;
+      case DATASET_SPACE_SEPARATED:
+      default:
+        sprintf(format,"%%lf %%lf %%lf %%lf %%lf %%lf %%lf %%lf %%lf %%lf");
+        break;
+    }
+    
     while ( getline (infile,line) )
     {
       int res = sscanf (line.data(), format, &ts, &d[0], &d[1], &d[2], 
@@ -104,25 +134,25 @@ template <typename _T>
 
 template void imu_tk::importAsciiData<double>( const char *filename, 
                                                vector< TriadData<double> > &samples,
-                                               TimestampUnit unit );
+                                               TimestampUnit unit, DatasetType type );
 template void imu_tk::importAsciiData<float>( const char *filename, 
                                                 vector< TriadData<float> > &samples,
-                                                TimestampUnit unit );
+                                                TimestampUnit unit, DatasetType type );
 template void imu_tk::importAsciiData<double> ( const char *filename,
                                                 vector< TriadData<double> > &samples0,
                                                 vector< TriadData<double> > &samples1,
-                                                TimestampUnit unit );
+                                                TimestampUnit unit, DatasetType type );
 template void imu_tk::importAsciiData<float> ( const char *filename,
                                                vector< TriadData<float> > &samples0,
                                                vector< TriadData<float> > &samples1,
-                                               TimestampUnit unit );  
+                                               TimestampUnit unit, DatasetType type );  
 template void imu_tk::importAsciiData<double> ( const char *filename,
                                                 vector< TriadData<double> > &samples0,
                                                 vector< TriadData<double> > &samples1,
                                                 vector< TriadData<double> > &samples2,
-                                                TimestampUnit unit );
+                                                TimestampUnit unit, DatasetType type );
 template void imu_tk::importAsciiData<float> ( const char *filename,
                                                vector< TriadData<float> > &samples0,
                                                vector< TriadData<float> > &samples1,
                                                vector< TriadData<float> > &samples2,
-                                               TimestampUnit unit );
+                                               TimestampUnit unit, DatasetType type );

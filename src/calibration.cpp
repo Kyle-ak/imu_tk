@@ -187,7 +187,7 @@ template <typename _T>
     }
     
     ceres::Solver::Options options;
-    options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
+    options.linear_solver_type = ceres::DENSE_QR;
     options.minimizer_progress_to_stdout = verbose_output_;
 
     ceres::Solver::Summary summary;
@@ -336,12 +336,13 @@ template <typename _T>
   }
   
   ceres::Solver::Options options;
-  options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
+  options.linear_solver_type = ceres::DENSE_QR;
   options.minimizer_progress_to_stdout = verbose_output_;
 
   ceres::Solver::Summary summary;
+
   ceres::Solve ( options, &problem, &summary );
-  
+    cout<<summary.FullReport()<<endl;  
   gyro_calib_ = CalibratedTriad<_T>( gyro_calib_params[0],
                                      gyro_calib_params[1],
                                      gyro_calib_params[2],
