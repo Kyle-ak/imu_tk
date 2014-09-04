@@ -18,9 +18,9 @@ int main(int argc, char** argv)
   vector< TriadData<double> > acc_data, gyro_data;
   
   cout<<"Importing IMU data from the Matlab matrix file : "<< argv[1]<<endl;  
-  importAsciiData( argv[1], acc_data, imu_tk::TIMESTAMPUNIT_SEC );
+  importAsciiData( argv[1], acc_data, imu_tk::TIMESTAMP_UNIT_SEC );
   cout<<"Importing IMU data from the Matlab matrix file : "<< argv[2]<<endl;  
-  importAsciiData( argv[2], gyro_data, imu_tk::TIMESTAMPUNIT_SEC  );
+  importAsciiData( argv[2], gyro_data, imu_tk::TIMESTAMP_UNIT_SEC  );
   
   
   CalibratedTriad<double> init_acc_calib, init_gyro_calib;
