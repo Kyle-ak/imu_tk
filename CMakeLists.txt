@@ -31,3 +31,10 @@ target_link_libraries( test_imu_calib
                        ${CERES_LIBRARIES})
                        
 set_target_properties( test_imu_calib PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
+add_executable(test_phone_calib apps/test_phone_calib.cpp)
+target_link_libraries( test_phone_calib
+                       imu_toolkit
+                       ${CERES_LIBRARIES})
+                       
+set_target_properties( test_phone_calib PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)

@@ -138,6 +138,9 @@ template <typename _T>
                                  std::vector< DataInterval<_T> > &extracted_intervals,
                                  int interval_n_samps = 100, bool only_means = false );
 
+template <typename _T> void decomposeRotation( const Eigen::Matrix< _T, 3, 3> &rot_mat,
+                                               Eigen::Matrix< _T, 3, 1> &axis_rot_vec );
+
 /* Implementations */
 
 template <typename _T>
@@ -246,6 +249,14 @@ template <typename _T>
       }
     }
   }
+}
+
+template <typename _T> void decomposeRotation( const Eigen::Matrix< _T, 3, 3> &rot_mat,
+                                               Eigen::Matrix< _T, 3, 1> &axis_rot_vec )
+{
+  axis_rot_vec(0) = atan2(rot_mat(2,1), rot_mat(2,2));
+  axis_rot_vec(1) = atan2(-rot_mat(2,0), sqrt(rot_mat(2,1)*rot_mat(2,1) + rot_mat(2,2)*rot_mat(2,2)));
+  axis_rot_vec(2) = atan2(rot_mat(1,0), rot_mat(0,0));
 }
 
 }

@@ -2,8 +2,6 @@
 
 #include "imu_tk/gnuplot_i.h"
 
-using namespace imu_tk;
-
 class imu_tk::Plot
 {
 public:
@@ -15,21 +13,21 @@ private:
   gnuplot_ctrl *hplot_;
 };
 
-imu_tk::PlotPtr createPlot()
+imu_tk::PlotPtr imu_tk::createPlot()
 {
-  return PlotPtr ( new imu_tk::Plot() );
+  return imu_tk::PlotPtr ( new imu_tk::Plot() );
 }
 
-void waitForKey()
+void imu_tk::waitForKey()
 {
   while (getchar()!='\n');  
 }
 
 template <typename _T> 
-  void plotSamples ( imu_tk::PlotPtr plot, const std::vector< TriadData<_T> >& samples, 
-                     DataInterval<_T> range )
+  void imu_tk::plotSamples ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData<_T> >& samples, 
+                             imu_tk::DataInterval<_T> range )
 {
-  range = checkInterval( samples, range );
+  range = imu_tk::checkInterval( samples, range );
   int n_pts = range.end_idx - range.start_idx + 1;;
   std::vector<double> ts(n_pts), x(n_pts), y(n_pts), z(n_pts);
     
@@ -51,16 +49,16 @@ template <typename _T>
 }
 
 template <typename _T> 
-  void plotIntervals ( imu_tk::PlotPtr plot, const std::vector< TriadData<_T> >& samples, 
-                       const std::vector< DataInterval<_T> >& intervals,
-                       DataInterval<_T> range )
+  void imu_tk::plotIntervals ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData<_T> >& samples, 
+                               const std::vector< imu_tk::DataInterval<_T> >& intervals,
+                               imu_tk::DataInterval<_T> range )
 {
-  range = checkInterval( samples, range );
+  range = imu_tk::checkInterval( samples, range );
   int n_pts = range.end_idx - range.start_idx + 1, 
               n_intervals = intervals.size();
   std::vector<double> ts(n_pts), intervals_plot(n_pts);
   
-  plotSamples (plot, samples, range );
+  imu_tk::plotSamples<_T> (plot, samples, range );
   double max = 0, mean = 0;
   for( int i = range.start_idx; i <= range.end_idx; i++)
   {
@@ -99,3 +97,14 @@ template <typename _T>
   }
   gnuplot_plot_xy(plot->getHandle(), ts.data(), intervals_plot.data(), n_pts, "intervals") ;
 }
+
+template void imu_tk::plotSamples<double> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData<double> >& samples, 
+                                            imu_tk::DataInterval<double> range );
+template void imu_tk::plotSamples<float> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData<float> >& samples, 
+                                           imu_tk::DataInterval<float> range );
+template void imu_tk::plotIntervals<double> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData<double> >& samples, 
+                                              const std::vector< imu_tk::DataInterval<double> >& intervals,
+                                              imu_tk::DataInterval<double> range );
+template void imu_tk::plotIntervals<float> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData<float> >& samples, 
+                                             const std::vector< imu_tk::DataInterval<float> >& intervals,
+                                             imu_tk::DataInterval<float> range );

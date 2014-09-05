@@ -37,8 +37,8 @@ int main(int argc, char** argv)
   mp_calib.enableAccUseMeans(false);
   //mp_calib.setGyroDataPeriod(0.01);
   mp_calib.calibrateAccGyro(acc_data, gyro_data );
-  mp_calib.getAccCalib().save("test_acc.calib");
-  mp_calib.getGyroCalib().save("test_acc.calib");
+  mp_calib.getAccCalib().save("test_imu_acc.calib");
+  mp_calib.getGyroCalib().save("test_imu_gyro.calib");
   
 //   for( int i = 0; i < acc_data.size(); i++)
 //   {

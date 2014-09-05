@@ -58,69 +58,74 @@ public:
                    const _T &b_x = _T(0),    const _T &b_y = _T(0),    const _T &b_z  = _T(0) );
  
   ~CalibratedTriad(){};
-  
-  inline _T misYZ() const { return mis_yz_; };
-  inline _T misZY() const { return mis_zy_; };
-  inline _T misZX() const { return mis_zx_; };
-  inline _T misXZ() const { return mis_xz_; };
-  inline _T misXY() const { return mis_xy_; };
-  inline _T misYX() const { return mis_yx_; };
+               
+  inline _T misYZ() const { return -mis_mat_(0,1); };
+  inline _T misZY() const { return mis_mat_(0,2); };
+  inline _T misZX() const { return -mis_mat_(1,2); };
+  inline _T misXZ() const { return mis_mat_(1,0); };
+  inline _T misXY() const { return -mis_mat_(2,0); };
+  inline _T misYX() const { return mis_mat_(2,1); };
 
-  inline _T scaleX() const { return s_x_; };
-  inline _T scaleY() const { return s_y_; };
-  inline _T scaleZ() const { return s_z_; };
+  inline _T scaleX() const { return scale_mat_(0,0); };
+  inline _T scaleY() const { return scale_mat_(1,1); };
+  inline _T scaleZ() const { return scale_mat_(2,2); };
       
-  inline _T biasX() const { return b_x_; };
-  inline _T biasY() const { return b_y_; };
-  inline _T biasZ() const { return b_z_; };
+  inline _T biasX() const { return bias_vec_(0); };
+  inline _T biasY() const { return bias_vec_(1); };
+  inline _T biasZ() const { return bias_vec_(2); };
   
   inline const Eigen::Matrix< _T, 3 , 3>& getMisalignmentMatrix() const { return mis_mat_; };
   inline const Eigen::Matrix< _T, 3 , 3>& getScaleMatrix() const { return scale_mat_; };
   inline const Eigen::Matrix< _T, 3 , 1>& getBiasVector() const { return bias_vec_; };
     
-  inline void setScale( const Eigen::Matrix< _T, 3 , 1> &s_vec ) { s_x_ = s_vec(0); s_y_ = s_vec(1); s_z_ = s_vec(2); };
-  inline void setBias( const Eigen::Matrix< _T, 3 , 1> &b_vec ) { b_x_ = b_vec(0); b_y_ = b_vec(1); b_z_ = b_vec(2); };
+  inline void setScale( const Eigen::Matrix< _T, 3 , 1> &s_vec ) 
+  { 
+    scale_mat_(0,0) = s_vec(0); scale_mat_(1,1) = s_vec(1);  scale_mat_(2,2) = s_vec(2); 
+    update();
+  };
+  
+  inline void setBias( const Eigen::Matrix< _T, 3 , 1> &b_vec ) 
+  { 
+    bias_vec_ = b_vec;
+    update();
+  };
   
   bool load( std::string filename );
   bool save( std::string filename ) const;
 
-  inline Eigen::Matrix< _T, 3 , 1> normalize( const Eigen::Matrix< _T, 3 , 1> &raw_data )
+  inline Eigen::Matrix< _T, 3 , 1> normalize( const Eigen::Matrix< _T, 3 , 1> &raw_data ) const
   {
     return ms_mat_*raw_data;
   };
   
-  inline TriadData<_T> normalize( const TriadData<_T> &raw_data )
+  inline TriadData<_T> normalize( const TriadData<_T> &raw_data ) const
   {
     return TriadData<_T>( raw_data.timestamp(), normalize( raw_data.data()) );
   };
   
-  inline Eigen::Matrix< _T, 3 , 1> unbiasNormalize( const Eigen::Matrix< _T, 3 , 1> &raw_data )
+  inline Eigen::Matrix< _T, 3 , 1> unbiasNormalize( const Eigen::Matrix< _T, 3 , 1> &raw_data ) const
   {
     return ms_mat_*(raw_data - bias_vec_); 
   };
   
-  inline TriadData<_T> unbiasNormalize( const TriadData<_T> &raw_data )
+  inline TriadData<_T> unbiasNormalize( const TriadData<_T> &raw_data ) const
   {
     return TriadData<_T>( raw_data.timestamp(), unbiasNormalize( raw_data.data()) );
   };
   
-  inline Eigen::Matrix< _T, 3 , 1> unbias( const Eigen::Matrix< _T, 3 , 1> &raw_data )
+  inline Eigen::Matrix< _T, 3 , 1> unbias( const Eigen::Matrix< _T, 3 , 1> &raw_data ) const
   {
     return raw_data - bias_vec_; 
   };
   
-  inline TriadData<_T> unbias( const TriadData<_T> &raw_data )
+  inline TriadData<_T> unbias( const TriadData<_T> &raw_data ) const
   {
     return TriadData<_T>( raw_data.timestamp(), unbias( raw_data.data()) );
   };
   
 private:
-  // Misalignment parameters
-  _T mis_yz_, mis_zy_, mis_zx_, mis_xz_, mis_xy_, mis_yx_;
-  // Scale parameters
-  _T s_x_, s_y_, s_z_;
-  // Biases
-  _T b_x_, b_y_, b_z_;
+
+  void update();
   // Misalignment matrix
   Eigen::Matrix< _T, 3 , 3> mis_mat_;
   // Scale matrix
@@ -132,16 +137,7 @@ private:
 };
 
 template <typename _T> std::ostream& operator<<(std::ostream& os, 
-                                                const CalibratedTriad<_T>& calib_triad)
-{
-  os<<"Misalignment Matrix"<<std::endl;
-  os<<calib_triad.getMisalignmentMatrix()<<std::endl;
-  os<<"Scale Matrix"<<std::endl;
-  os<<calib_triad.getScaleMatrix()<<std::endl;
-  os<<"Bias Vector"<<std::endl;
-  os<<calib_triad.getBiasVector()<<std::endl;
-  return os;
-}
+                                                const imu_tk::CalibratedTriad<_T>& calib_triad);
 
 template <typename _T = double > class MultiPosCalibration
 {
@@ -204,25 +200,19 @@ template <typename _T>
   imu_tk::CalibratedTriad<_T>::CalibratedTriad( const _T &mis_yz, const _T &mis_zy, const _T &mis_zx, 
                                                 const _T &mis_xz, const _T &mis_xy, const _T &mis_yx, 
                                                 const _T &s_x, const _T &s_y, const _T &s_z, 
-                                                const _T &b_x, const _T &b_y, const _T &b_z ) :
-  mis_yz_(mis_yz), mis_zy_(mis_zy), mis_zx_(mis_zx), 
-  mis_xz_(mis_xz), mis_xy_(mis_xy), mis_yx_(mis_yx),
-  s_x_(s_x), s_y_(s_y), s_z_(s_z),
-  b_x_(b_x), b_y_(b_y), b_z_(b_z)
+                                                const _T &b_x, const _T &b_y, const _T &b_z )
 {
-  mis_mat_ <<  _T(1)    , -mis_yz_ ,  mis_zy_ ,
-                mis_xz_ ,  _T(1)   , -mis_zx_ ,  
-               -mis_xy_ ,  mis_yx_ ,  _T(1)   ;
+  mis_mat_ <<  _T(1)   , -mis_yz  ,  mis_zy  ,
+                mis_xz ,  _T(1)   , -mis_zx  ,  
+               -mis_xy ,  mis_yx  ,  _T(1)   ;
               
-  scale_mat_ <<   s_x_ ,   _T(0)  ,  _T(0) ,
-                 _T(0) ,    s_y_  ,  _T(0) ,  
-                 _T(0) ,   _T(0)  ,   s_z_ ;
+  scale_mat_ <<   s_x  ,   _T(0)  ,  _T(0) ,
+                 _T(0) ,    s_y   ,  _T(0) ,  
+                 _T(0) ,   _T(0)  ,   s_z  ;
                     
-  ms_mat_ = mis_mat_*scale_mat_;
-                    
-  bias_vec_ <<  b_x_ ,
-                b_y_ ,
-                b_z_ ; 
+  bias_vec_ <<  b_x , b_y , b_z ; 
+  
+  update();
 }
 
 template <typename _T> 
@@ -248,6 +238,8 @@ template <typename _T>
     
     bias_vec_ = Eigen::Map< const Eigen::Matrix< _T, 3, 1> >(mat);    
     
+    update();
+    
     return true;
   }
   return false;  
@@ -266,4 +258,21 @@ template <typename _T>
     return true;
   }
   return false;  
+}
+
+template <typename _T> void imu_tk::CalibratedTriad<_T>::update()
+{
+  ms_mat_ = mis_mat_*scale_mat_;
+}
+
+template <typename _T> std::ostream& imu_tk::operator<<(std::ostream& os, 
+                                                        const imu_tk::CalibratedTriad<_T>& calib_triad)
+{
+  os<<"Misalignment Matrix"<<std::endl;
+  os<<calib_triad.getMisalignmentMatrix()<<std::endl;
+  os<<"Scale Matrix"<<std::endl;
+  os<<calib_triad.getScaleMatrix()<<std::endl;
+  os<<"Bias Vector"<<std::endl;
+  os<<calib_triad.getBiasVector()<<std::endl;
+  return os;
 }

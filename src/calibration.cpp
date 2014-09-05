@@ -123,6 +123,8 @@ template <typename _T>
 template <typename _T>
   bool MultiPosCalibration<_T>::calibrateAcc ( const std::vector< TriadData<_T> >& acc_samples )
 {
+  cout<<"Accelerometers calibration: calibrating..."<<endl;
+  
   min_cost_static_intervals_.clear();
   calib_acc_samples_.clear();
   calib_gyro_samples_.clear();
@@ -228,6 +230,9 @@ template <typename _T>
   
   if(verbose_output_) 
   {
+    PlotPtr plot = createPlot();
+    plotIntervals( plot, calib_acc_samples_, min_cost_static_intervals_);
+    waitForKey();
     cout<<"Accelerometers calibration: Better calibration obtained using threshold multiplier "<<min_cost_th
         <<" with residual "<<min_cost<<endl
         <<acc_calib_<<endl
@@ -248,6 +253,8 @@ template <typename _T>
   if( !calibrateAcc( acc_samples ) )
     return false;
   
+  cout<<"Gyroscopes calibration: calibrating..."<<endl;
+  
   std::vector< TriadData<_T> > static_acc_means;
   std::vector< DataInterval<_T> > extracted_intervals;
   extractIntervalsSamples ( calib_acc_samples_, min_cost_static_intervals_, 
@@ -256,7 +263,7 @@ template <typename _T>
   
   int n_static_pos = static_acc_means.size(), n_samps = gyro_samples.size();
   
-  // Compute the gyroscope biases in the (static) initialization interval
+  // Compute the gyroscopes biases in the (static) initialization interval
   Eigen::Matrix<_T, 3, 1> gyro_bias = dataMean( gyro_samples, DataInterval<_T>( 0, n_init_samples_) );
   
   gyro_calib_ = CalibratedTriad<_T>(0, 0, 0, 0, 0, 0, 
@@ -342,7 +349,6 @@ template <typename _T>
   ceres::Solver::Summary summary;
 
   ceres::Solve ( options, &problem, &summary );
-    cout<<summary.FullReport()<<endl;  
   gyro_calib_ = CalibratedTriad<_T>( gyro_calib_params[0],
                                      gyro_calib_params[1],
                                      gyro_calib_params[2],
@@ -356,16 +362,17 @@ template <typename _T>
                                      gyro_bias(1) + gyro_calib_params[10],
                                      gyro_bias(2) + gyro_calib_params[11]);                            
 
-  
-  // Calibrate the input gyroscope data with the obtained calibration
+  // Calibrate the input gyroscopes data with the obtained calibration
   for( int i = 0; i < n_samps; i++)
     calib_gyro_samples_.push_back( gyro_calib_.unbiasNormalize( gyro_samples[i]) );
   
   if(verbose_output_) 
   {
-    cout<<"Gyroscope calibration: residual "<<summary.final_cost<<endl
+    
+    cout<<summary.FullReport()<<endl;
+    cout<<"Gyroscopes calibration: residual "<<summary.final_cost<<endl
         <<gyro_calib_<<endl
-        <<"Gyroscope calibration: inverse scale factors:"<<endl
+        <<"Gyroscopes calibration: inverse scale factors:"<<endl
         <<1.0/gyro_calib_.scaleX()<<endl
         <<1.0/gyro_calib_.scaleY()<<endl
         <<1.0/gyro_calib_.scaleZ()<<endl;    

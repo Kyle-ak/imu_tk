@@ -33,13 +33,18 @@ template <typename _T>
         break;
     }
 
+    int l = 0;
     while ( getline (infile,line) )
     {
       int res = sscanf (line.data(), format, &ts, &d[0], &d[1], &d[2]);
       if ( res != 4 )
+      {
+        cout<<"importAsciiData(): error in line "<<l<<", exit"<<endl;
         break;
+      }
       ts /= unit;
       samples.push_back( TriadData<_T>(_T(ts), _T(d[0]), _T(d[1]), _T(d[2])) );
+      l++;
     }
     infile.close();
   }
@@ -73,15 +78,20 @@ template <typename _T>
         break;
     }
     
+    int l = 0;
     while ( getline (infile,line) )
     {
       int res = sscanf (line.data(), format, &ts, &d[0], &d[1], &d[2],
                         &d[3], &d[4], &d[5]);
       if ( res != 7 )
+      {
+        cout<<"importAsciiData(): error in line "<<l<<", exit"<<endl;
         break;
+      }
       ts /= unit;
       samples0.push_back( TriadData<_T>(_T(ts), _T(d[0]), _T(d[1]), _T(d[2])) );
       samples1.push_back( TriadData<_T>(_T(ts), _T(d[3]), _T(d[4]), _T(d[5])) );
+      l++;
     }
     infile.close();
   }
@@ -117,16 +127,21 @@ template <typename _T>
         break;
     }
     
+    int l = 0;
     while ( getline (infile,line) )
     {
       int res = sscanf (line.data(), format, &ts, &d[0], &d[1], &d[2], 
                         &d[3], &d[4], &d[5], &d[6], &d[7], &d[8]);
       if ( res != 10 )
+      {
+        cout<<"importAsciiData(): error in line "<<l<<", exit"<<endl;
         break;
+      }
       ts /= unit;
       samples0.push_back( TriadData<_T>(_T(ts), _T(d[0]), _T(d[1]), _T(d[2])) );
       samples1.push_back( TriadData<_T>(_T(ts), _T(d[3]), _T(d[4]), _T(d[5])) );
       samples2.push_back( TriadData<_T>(_T(ts), _T(d[6]), _T(d[7]), _T(d[8])) );
+      l++;
     }
     infile.close();
   }
