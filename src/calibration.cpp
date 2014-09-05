@@ -117,7 +117,7 @@ template <typename _T>
   interval_n_samples_(100),
   acc_use_means_(false),
   gyro_dt_(-1.0),
-  optimize_gyro_bias_(true),
+  optimize_gyro_bias_(false),
   verbose_output_(false){}
 
 template <typename _T>

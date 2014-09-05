@@ -54,7 +54,7 @@ int main(int argc, char** argv)
   plotIntervals(plot1,gyro_data_test, static_intervals);
 //   plotSamples(plot1, gyro_data_test);
   
-  Vector3d gyro_bias = dataMean( gyro_data_test_calib, DataInterval<double>(100, 5000));
+  Vector3d gyro_bias = dataMean( gyro_data_test_calib, DataInterval<double>(100, 3000));
   CalibratedTriad<double> bias_calib;
   bias_calib.setBias(gyro_bias);
 
@@ -72,12 +72,12 @@ int main(int argc, char** argv)
 //   waitForKey();
 
 
-  std::ofstream file( "results.mat", ios_base::app );
-  if (!file.is_open())
-  {
-    return -1;
-  }
-  
+//   std::ofstream file( "results.mat", ios_base::app );
+//   if (!file.is_open())
+//   {
+//     return -1;
+//   }
+//   
   int uncalib_score = 0, calib_score = 0;
   cout<<"n_intervals :"<<n_intervals<<endl;
   for(int i = n_intervals; i < static_intervals.size(); i++)
@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     cout<<"Uncalib : "<<res.norm() <<endl;
     cout<<"Calib   : "<<res_calib.norm()<<endl<<endl;
 
-    file<<interval_len<<" "<<res.norm()<<" "<<res_calib.norm()<<endl;
+//     file<<interval_len<<" "<<res.norm()<<" "<<res_calib.norm()<<endl;
 //     if(res.norm() - res_calib(2)) > 0.01)
 //     {
     if(res.norm() <= res_calib.norm())
