@@ -1,4 +1,4 @@
-project(imu_toolkit)
+project(imu_tk)
 
 cmake_minimum_required (VERSION 2.8) 
 cmake_policy(SET CMP0015 NEW)
@@ -22,19 +22,19 @@ include_directories(./include
                    
 aux_source_directory( src IMU_TOOLKIT_SRC )
 
-add_library(imu_toolkit STATIC ${IMU_TOOLKIT_SRC})
-set_target_properties(imu_toolkit PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+add_library(imu_tk STATIC ${IMU_TOOLKIT_SRC})
+set_target_properties(imu_tk PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 add_executable(test_imu_calib apps/test_imu_calib.cpp)
 target_link_libraries( test_imu_calib
-                       imu_toolkit
+                       imu_tk
                        ${CERES_LIBRARIES})
                        
 set_target_properties( test_imu_calib PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 add_executable(test_phone_calib apps/test_phone_calib.cpp)
 target_link_libraries( test_phone_calib
-                       imu_toolkit
+                       imu_tk
                        ${CERES_LIBRARIES})
                        
 set_target_properties( test_phone_calib PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)

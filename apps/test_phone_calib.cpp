@@ -72,11 +72,11 @@ int main(int argc, char** argv)
 //   waitForKey();
 
 
-//   std::ofstream file( "results.mat", ios_base::app );
-//   if (!file.is_open())
-//   {
-//     return -1;
-//   }
+  std::ofstream file( "results.mat", ios_base::app );
+  if (!file.is_open())
+  {
+    return -1;
+  }
 //   
   int uncalib_score = 0, calib_score = 0;
   cout<<"n_intervals :"<<n_intervals<<endl;
@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     cout<<"Uncalib : "<<res.norm() <<endl;
     cout<<"Calib   : "<<res_calib.norm()<<endl<<endl;
 
-//     file<<interval_len<<" "<<res.norm()<<" "<<res_calib.norm()<<endl;
+    file<<interval_len<<" "<<res.norm()<<" "<<res_calib.norm()<<endl;
 //     if(res.norm() - res_calib(2)) > 0.01)
 //     {
     if(res.norm() <= res_calib.norm())
@@ -129,6 +129,6 @@ int main(int argc, char** argv)
 //   }
 //   cout<<"Read "<<acc_data.size()<<" tuples"<<endl;
   
-  waitForKey();
+//   waitForKey();
   return 0;
 }
