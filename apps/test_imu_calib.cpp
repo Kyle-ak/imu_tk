@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "imu_tk/dataset_utils.h"
+#include "imu_tk/io_utils.h"
 #include "imu_tk/calibration.h"
 #include "imu_tk/filters.h"
 #include "imu_tk/integration.h"
@@ -15,7 +15,7 @@ int main(int argc, char** argv)
   if( argc < 3 )
     return -1;
 
-  vector< TriadData<double> > acc_data, gyro_data;
+  vector< TriadData > acc_data, gyro_data;
   
   cout<<"Importing IMU data from the Matlab matrix file : "<< argv[1]<<endl;  
   importAsciiData( argv[1], acc_data, imu_tk::TIMESTAMP_UNIT_SEC );
@@ -23,11 +23,11 @@ int main(int argc, char** argv)
   importAsciiData( argv[2], gyro_data, imu_tk::TIMESTAMP_UNIT_SEC  );
   
   
-  CalibratedTriad<double> init_acc_calib, init_gyro_calib;
+  CalibratedTriad init_acc_calib, init_gyro_calib;
   init_acc_calib.setBias( Vector3d(32768, 32768, 32768) );
   init_gyro_calib.setScale( Vector3d(1.0/6258.0, 1.0/6258.0, 1.0/6258.0) );
   
-  MultiPosCalibration<double> mp_calib;
+  MultiPosCalibration mp_calib;
     
   mp_calib.setNumInitSamples(5000);
   mp_calib.setInitAccCalibration( init_acc_calib );

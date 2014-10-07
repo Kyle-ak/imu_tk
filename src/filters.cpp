@@ -3,8 +3,8 @@
 using namespace Eigen;
 
 template <typename _T> 
-  void imu_tk::staticIntervalsDetector ( const std::vector< imu_tk::TriadData<_T> >& samples, 
-                                         _T threshold, std::vector< imu_tk::DataInterval<_T> >& intervals, 
+  void imu_tk::staticIntervalsDetector ( const std::vector< imu_tk::TriadData_<_T> >& samples, 
+                                         _T threshold, std::vector< imu_tk::DataInterval_<_T> >& intervals, 
                                          int win_size )
 {
   if ( win_size < 11 ) win_size = 11;
@@ -18,11 +18,11 @@ template <typename _T>
   intervals.clear();
   
   bool look_for_start = true;
-  imu_tk::DataInterval<_T> current_interval;
+  imu_tk::DataInterval_<_T> current_interval;
   
   for( int i = h; i < samples.size() - h; i++ )
   {
-    Matrix< _T, 3, 1> variance = dataVariance( samples, DataInterval<_T>( i - h, i + h) );
+    Matrix< _T, 3, 1> variance = dataVariance( samples, DataInterval_<_T>( i - h, i + h) );
     _T norm = variance.norm();
     
     if( look_for_start )
@@ -55,9 +55,9 @@ template <typename _T>
   }
 }
 
-template void imu_tk::staticIntervalsDetector<double> ( const std::vector< TriadData<double> > &samples,
-                                                        double threshold, std::vector< DataInterval<double> > &intervals,
+template void imu_tk::staticIntervalsDetector<double> ( const std::vector< TriadData_<double> > &samples,
+                                                        double threshold, std::vector< DataInterval_<double> > &intervals,
                                                         int win_size = 101 );
-template void imu_tk::staticIntervalsDetector<float> ( const std::vector< TriadData<float> > &samples,
-                                                       float threshold, std::vector< DataInterval<float> > &intervals,
+template void imu_tk::staticIntervalsDetector<float> ( const std::vector< TriadData_<float> > &samples,
+                                                       float threshold, std::vector< DataInterval_<float> > &intervals,
                                                        int win_size = 101 );

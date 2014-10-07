@@ -12,17 +12,21 @@ message("${CMAKE_CXX_FLAGS_RELEASE}")
 find_package(Boost REQUIRED)  
 find_package(Eigen REQUIRED)
 find_package(Ceres REQUIRED)
+find_package(PCL 1.6 REQUIRED)
+add_definitions(${PCL_DEFINITIONS})
 
 include_directories(./include
                     /usr/include
                     ${Boost_INCLUDE_DIRS}
                     ${EIGEN_INCLUDE_DIR}
-                    ${CERES_INCLUDE_DIRS})
+                    ${CERES_INCLUDE_DIRS}
+                    ${PCL_INCLUDE_DIRS})
 
                    
 aux_source_directory( src IMU_TOOLKIT_SRC )
 
 add_library(imu_tk STATIC ${IMU_TOOLKIT_SRC})
+target_link_libraries( imu_tk ${PCL_LIBRARIES} )
 set_target_properties(imu_tk PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 add_executable(test_imu_calib apps/test_imu_calib.cpp)
@@ -38,3 +42,10 @@ target_link_libraries( test_phone_calib
                        ${CERES_LIBRARIES})
                        
 set_target_properties( test_phone_calib PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
+add_executable(test_integration apps/test_integration.cpp)
+target_link_libraries( test_integration
+                       imu_tk
+                       ${CERES_LIBRARIES})
+                       
+set_target_properties( test_integration PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)

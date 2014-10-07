@@ -7,41 +7,43 @@
 namespace imu_tk
 {
 
-template <typename _T = double> struct DataInterval
+template <typename _T > struct DataInterval_
 {
 public:
-  DataInterval() {};
-  DataInterval ( int idx0, int idx1, _T ts0, _T ts1 ) :
+  DataInterval_() {};
+  DataInterval_ ( int idx0, int idx1, _T ts0, _T ts1 ) :
     start_idx ( idx0 ), end_idx ( idx1 ),start_ts ( ts0 ), end_ts ( ts1 ) {};
-  DataInterval ( int idx0, int idx1 ) :
+  DataInterval_ ( int idx0, int idx1 ) :
     start_idx ( idx0 ), end_idx ( idx1 ),start_ts ( _T(-1) ), end_ts ( _T(-1) ) {};
   int start_idx, end_idx;
   _T start_ts, end_ts;
 };
 
-template <typename _T = double> class TriadData
+typedef DataInterval_<double> DataInterval;
+
+template <typename _T > class TriadData_
 {
 public:
-  TriadData() {};
+  TriadData_() {};
    
-  TriadData ( _T timestamp, _T x, _T y, _T z ) :
+  TriadData_ ( _T timestamp, _T x, _T y, _T z ) :
     timestamp_ ( timestamp ),
     data_ ( x, y, z ) {};
 
-  TriadData ( _T timestamp, const Eigen::Matrix< _T, 3, 1> &data ) :
+  TriadData_ ( _T timestamp, const Eigen::Matrix< _T, 3, 1> &data ) :
     timestamp_ ( timestamp ),
     data_ ( data ) {};
 
-  TriadData ( _T timestamp, const _T *data ) :
+  TriadData_ ( _T timestamp, const _T *data ) :
     timestamp_ ( timestamp ),
     data_ ( data[0], data[1], data[2] ) {};
 
   //Copy constructor
-  TriadData( const TriadData &o ) :
+  TriadData_( const TriadData_ &o ) :
    timestamp_(o.timestamp_), data_(o.data_) {};
   
   // Copy assignment operator
-  TriadData & operator = (const TriadData &o )
+  TriadData_ & operator = (const TriadData_ &o )
   {
     timestamp_ = o.timestamp_;
     data_ = o.data_;
@@ -50,20 +52,20 @@ public:
  
   // Supporting coercion using member template constructor.
   template< typename _newT >
-    TriadData( const TriadData<_newT> &o ) :
+    TriadData_( const TriadData_<_newT> &o ) :
     timestamp_(_T(o.timestamp())), data_(o.data().template cast<_T>())
   {};
   
   // Supporting coercion using member template assignment operator.
   template< typename _newT >
-    TriadData & operator = (const TriadData<_newT> &o )
+    TriadData_ & operator = (const TriadData_<_newT> &o )
   {
     timestamp_ = _T(o.timestamp());
     data_ = o.data().template cast<_T>();
     return *this;
   };
     
-  ~TriadData() {};
+  ~TriadData_() {};
 
   inline const _T& timestamp() const
   {
@@ -95,19 +97,21 @@ private:
   _T timestamp_;
 };
 
+typedef TriadData_<double> TriadData;
+
 template <typename _T> 
-  std::ostream& operator<<(std::ostream& os, const TriadData<_T>& triad_data);
+  std::ostream& operator<<(std::ostream& os, const TriadData_<_T>& triad_data);
 
 
 template <typename _T> 
-  DataInterval<_T> checkInterval( const std::vector< TriadData<_T> > &samples, 
-                                  const DataInterval<_T> &interval );
+  DataInterval_<_T> checkInterval( const std::vector< TriadData_<_T> > &samples, 
+                                  const DataInterval_<_T> &interval );
 template <typename _T> 
-  Eigen::Matrix< _T, 3, 1> dataMean ( const std::vector< TriadData<_T> > &samples, 
-                                      const DataInterval<_T> &interval = DataInterval<_T> (-1, -1) );
+  Eigen::Matrix< _T, 3, 1> dataMean ( const std::vector< TriadData_<_T> > &samples, 
+                                      const DataInterval_<_T> &interval = DataInterval_<_T> (-1, -1) );
 template <typename _T>
-  Eigen::Matrix< _T, 3, 1> dataVariance ( const std::vector< TriadData<_T> > &samples, 
-                                          const DataInterval<_T> &interval = DataInterval<_T> (-1, -1) );
+  Eigen::Matrix< _T, 3, 1> dataVariance ( const std::vector< TriadData_<_T> > &samples, 
+                                          const DataInterval_<_T> &interval = DataInterval_<_T> (-1, -1) );
 
 /**
   * @brief If the flag only_means is set to false, for each interval 
@@ -132,10 +136,10 @@ template <typename _T>
   * 
   */
 template <typename _T> 
-  void extractIntervalsSamples ( const std::vector< TriadData<_T> > &samples,
-                                 const std::vector< DataInterval<_T> > &intervals,
-                                 std::vector< TriadData<_T> > &extracted_samples,
-                                 std::vector< DataInterval<_T> > &extracted_intervals,
+  void extractIntervalsSamples ( const std::vector< TriadData_<_T> > &samples,
+                                 const std::vector< DataInterval_<_T> > &intervals,
+                                 std::vector< TriadData_<_T> > &extracted_samples,
+                                 std::vector< DataInterval_<_T> > &extracted_intervals,
                                  int interval_n_samps = 100, bool only_means = false );
 
 template <typename _T> void decomposeRotation( const Eigen::Matrix< _T, 3, 3> &rot_mat,
@@ -144,7 +148,7 @@ template <typename _T> void decomposeRotation( const Eigen::Matrix< _T, 3, 3> &r
 /* Implementations */
 
 template <typename _T>
-  std::ostream& operator<<(std::ostream& os, const TriadData<_T>& triad_data)
+  std::ostream& operator<<(std::ostream& os, const TriadData_<_T>& triad_data)
 {
   os<<"ts : "<<triad_data.timestamp();
   os<<" data : [ ";
@@ -156,22 +160,22 @@ template <typename _T>
 }
 
 template <typename _T>
-  DataInterval<_T> checkInterval( const std::vector< TriadData<_T> > &samples, 
-                                  const DataInterval<_T> &interval )
+  DataInterval_<_T> checkInterval( const std::vector< TriadData_<_T> > &samples, 
+                                  const DataInterval_<_T> &interval )
 {
   int start_idx = interval.start_idx, end_idx = interval.end_idx;
   if( start_idx < 0) start_idx = 0;
   if( end_idx < start_idx ) end_idx = samples.size() - 1;
   
-  return DataInterval<_T>( start_idx, end_idx, 
+  return DataInterval_<_T>( start_idx, end_idx, 
                            samples[start_idx].timestamp(), samples[end_idx].timestamp() );
 }
 
 template <typename _T>
-  Eigen::Matrix< _T, 3, 1> dataMean( const std::vector< TriadData<_T> >& samples, 
-                                     const DataInterval<_T>& interval )
+  Eigen::Matrix< _T, 3, 1> dataMean( const std::vector< TriadData_<_T> >& samples, 
+                                     const DataInterval_<_T>& interval )
 {
-  DataInterval<_T> rev_interval =  checkInterval( samples, interval );
+  DataInterval_<_T> rev_interval =  checkInterval( samples, interval );
   int n_samp = rev_interval.end_idx - rev_interval.start_idx + 1;
   Eigen::Matrix< _T, 3, 1> mean(0, 0, 0);
   
@@ -184,10 +188,10 @@ template <typename _T>
 }
 
 template <typename _T>
-  Eigen::Matrix< _T, 3, 1> dataVariance( const std::vector< TriadData<_T> >& samples, 
-                                  const DataInterval<_T>& interval )
+  Eigen::Matrix< _T, 3, 1> dataVariance( const std::vector< TriadData_<_T> >& samples, 
+                                  const DataInterval_<_T>& interval )
 {
-  DataInterval<_T> rev_interval =  checkInterval( samples, interval );
+  DataInterval_<_T> rev_interval =  checkInterval( samples, interval );
   int n_samp = rev_interval.end_idx - rev_interval.start_idx + 1;
   Eigen::Matrix< _T, 3, 1> mean = dataMean( samples, rev_interval );
   
@@ -203,10 +207,10 @@ template <typename _T>
 }
 
 template <typename _T>
-  void extractIntervalsSamples ( const std::vector< TriadData<_T> >& samples, 
-                                 const std::vector< DataInterval<_T> >& intervals, 
-                                 std::vector< TriadData<_T> >& extracted_samples, 
-                                 std::vector< DataInterval<_T> > &extracted_intervals,
+  void extractIntervalsSamples ( const std::vector< TriadData_<_T> >& samples, 
+                                 const std::vector< DataInterval_<_T> >& intervals, 
+                                 std::vector< TriadData_<_T> >& extracted_samples, 
+                                 std::vector< DataInterval_<_T> > &extracted_intervals,
                                  int interval_n_samps, bool only_means )
 {
   // Check for valid intervals  (i.e., intervals with at least interval_n_samps samples)
@@ -236,11 +240,11 @@ template <typename _T>
       if( only_means )
       {
         int interval_size = intervals[i].end_idx - intervals[i].start_idx + 1;
-        DataInterval<_T> mean_inerval( intervals[i].start_idx, intervals[i].end_idx );
+        DataInterval_<_T> mean_inerval( intervals[i].start_idx, intervals[i].end_idx );
         // Take the timestamp centered in the interval where the mean is computed
         _T timestamp = samples[ intervals[i].start_idx + interval_size/2 ].timestamp();
         Eigen::Matrix< _T, 3, 1> mean_val = dataMean ( samples, mean_inerval );
-        extracted_samples.push_back( TriadData<_T>(timestamp, mean_val ) );
+        extracted_samples.push_back( TriadData_<_T>(timestamp, mean_val ) );
       }
       else
       {

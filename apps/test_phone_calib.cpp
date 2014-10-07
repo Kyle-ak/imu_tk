@@ -16,13 +16,13 @@ int main(int argc, char** argv)
   if( argc >= 4)
     n_intervals = atoi(argv[3]);
     
-  vector< TriadData<double> > acc_data_calib, gyro_data_calib;
+  vector< TriadData > acc_data_calib, gyro_data_calib;
   
   cout<<"Importing IMU data from the comma separated file : "<< argv[1]<<endl;  
   importAsciiData( argv[1], acc_data_calib, gyro_data_calib, 
                    imu_tk::TIMESTAMP_UNIT_SEC, imu_tk::DATASET_COMMA_SEPARATED );
   
-  MultiPosCalibration<double> mp_calib;
+  MultiPosCalibration mp_calib;
     
   mp_calib.setNumInitSamples(5000);
   mp_calib.setGravityMagnitude(9.803);
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 //   mp_calib.getAccCalib().save("test_phone_acc.calib");
 //   mp_calib.getGyroCalib().save("test_phone_gyro.calib");
   
-  vector< TriadData<double> > acc_data_test, gyro_data_test, gyro_data_test_calib;
+  vector< TriadData > acc_data_test, gyro_data_test, gyro_data_test_calib;
   
   cout<<"Importing IMU data from the comma separated file : "<< argv[2]<<endl;  
   importAsciiData( argv[2], acc_data_test, gyro_data_test, 
@@ -43,9 +43,9 @@ int main(int argc, char** argv)
     gyro_data_test_calib.push_back(mp_calib.getGyroCalib().normalize(gyro_data_test[i]));
   
 
-  vector<DataInterval<double> >tmp_intervals, static_intervals;
-  vector<TriadData<double> >acc_means;
-  Vector3d variance = dataVariance( acc_data_test, DataInterval<double>(100, 3000));
+  vector<DataInterval>tmp_intervals, static_intervals;
+  vector<TriadData >acc_means;
+  Vector3d variance = dataVariance( acc_data_test, DataInterval(100, 3000));
   staticIntervalsDetector( acc_data_test, 4*variance.norm(), tmp_intervals);
   extractIntervalsSamples( acc_data_test, tmp_intervals, acc_means, static_intervals, 100, true);
   
@@ -54,14 +54,14 @@ int main(int argc, char** argv)
   plotIntervals(plot1,gyro_data_test, static_intervals);
 //   plotSamples(plot1, gyro_data_test);
   
-  Vector3d gyro_bias = dataMean( gyro_data_test_calib, DataInterval<double>(100, 3000));
-  CalibratedTriad<double> bias_calib;
+  Vector3d gyro_bias = dataMean( gyro_data_test_calib, DataInterval(100, 3000));
+  CalibratedTriad bias_calib;
   bias_calib.setBias(gyro_bias);
 
   for(int i = 0; i < gyro_data_test_calib.size(); i++)
     gyro_data_test_calib[i] = bias_calib.unbias(gyro_data_test_calib[i]);
   
-  gyro_bias = dataMean( gyro_data_test, DataInterval<double>(100, 3000));
+  gyro_bias = dataMean( gyro_data_test, DataInterval(100, 3000));
   bias_calib.setBias(gyro_bias);
 
   for(int i = 0; i < gyro_data_test.size(); i++)
@@ -85,8 +85,8 @@ int main(int argc, char** argv)
     Vector3d res, res_calib;
     Matrix3d test_rot_res, test_rot_res_calib;
     
-    integrateGyroInterval( gyro_data_test, test_rot_res, double(-1), DataInterval<double>(static_intervals[i-n_intervals].end_idx, static_intervals[i].start_idx) );
-    integrateGyroInterval( gyro_data_test_calib, test_rot_res_calib, double(-1), DataInterval<double>(static_intervals[i-n_intervals].end_idx, static_intervals[i].start_idx) );
+    integrateGyroInterval( gyro_data_test, test_rot_res, double(-1), DataInterval(static_intervals[i-n_intervals].end_idx, static_intervals[i].start_idx) );
+    integrateGyroInterval( gyro_data_test_calib, test_rot_res_calib, double(-1), DataInterval(static_intervals[i-n_intervals].end_idx, static_intervals[i].start_idx) );
     
     decomposeRotation(test_rot_res, res);
     decomposeRotation(test_rot_res_calib, res_calib);
@@ -129,6 +129,6 @@ int main(int argc, char** argv)
 //   }
 //   cout<<"Read "<<acc_data.size()<<" tuples"<<endl;
   
-//   waitForKey();
+   waitForKey();
   return 0;
 }

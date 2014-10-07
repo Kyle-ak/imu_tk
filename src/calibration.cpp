@@ -23,7 +23,7 @@ template <typename _T1> struct MultiPosAccResidual
     Eigen::Matrix< _T2, 3 , 1> raw_samp( _T2(sample_(0)), _T2(sample_(1)), _T2(sample_(2)) );
     /* Assume body frame same as accelerometer frame, 
      * so bottom left params in the misalignment matris are set to zero */
-    CalibratedTriad<_T2> calib_triad( params[0], params[1], params[2], 
+    CalibratedTriad_<_T2> calib_triad( params[0], params[1], params[2], 
                                      _T2(0), _T2(0), _T2(0),
                                      params[3], params[4], params[5], 
                                      params[6], params[7], params[8] );
@@ -47,8 +47,8 @@ template <typename _T1> struct MultiPosGyroResidual
 {
   MultiPosGyroResidual( const Eigen::Matrix< _T1, 3 , 1> &g_versor_pos0, 
                         const Eigen::Matrix< _T1, 3 , 1> &g_versor_pos1,
-                        const std::vector< TriadData<_T1> > &gyro_samples, 
-                        const DataInterval<_T1> &gyro_interval_pos01, 
+                        const std::vector< TriadData_<_T1> > &gyro_samples, 
+                        const DataInterval_<_T1> &gyro_interval_pos01, 
                         _T1 dt, bool optimize_bias) :
 
   g_versor_pos0_(g_versor_pos0), 
@@ -60,18 +60,18 @@ template <typename _T1> struct MultiPosGyroResidual
   template <typename _T2>
     bool operator() ( const _T2* const params, _T2* residuals ) const
   {
-    CalibratedTriad<_T2> calib_triad( params[0], params[1], params[2], 
+    CalibratedTriad_<_T2> calib_triad( params[0], params[1], params[2], 
                                       params[3], params[4], params[5], 
                                       params[6], params[7], params[8],
                                       optimize_bias_?params[9]:_T2(0), 
                                       optimize_bias_?params[10]:_T2(0), 
                                       optimize_bias_?params[11]:_T2(0) );
 
-    std::vector< TriadData<_T2> > calib_gyro_samples;
+    std::vector< TriadData_<_T2> > calib_gyro_samples;
     calib_gyro_samples.reserve( interval_pos01_.end_idx - interval_pos01_.start_idx + 1 );
     
     for( int i = interval_pos01_.start_idx; i <= interval_pos01_.end_idx; i++ )
-      calib_gyro_samples.push_back( TriadData<_T2>( calib_triad.unbiasNormalize( gyro_samples_[i] ) ) );
+      calib_gyro_samples.push_back( TriadData_<_T2>( calib_triad.unbiasNormalize( gyro_samples_[i] ) ) );
     
     Eigen::Matrix< _T2, 3 , 3> rot_mat;
     integrateGyroInterval( calib_gyro_samples, rot_mat, _T2(dt_) );
@@ -88,8 +88,8 @@ template <typename _T1> struct MultiPosGyroResidual
   
   static ceres::CostFunction* Create ( const Eigen::Matrix< _T1, 3 , 1> &g_versor_pos0, 
                                        const Eigen::Matrix< _T1, 3 , 1> &g_versor_pos1,
-                                       const std::vector< TriadData<_T1> > &gyro_samples, 
-                                       const DataInterval<_T1> &gyro_interval_pos01, 
+                                       const std::vector< TriadData_<_T1> > &gyro_samples, 
+                                       const DataInterval_<_T1> &gyro_interval_pos01, 
                                        _T1 dt, bool optimize_bias )
   {
     if( optimize_bias )
@@ -103,14 +103,14 @@ template <typename _T1> struct MultiPosGyroResidual
   }
   
   const Eigen::Matrix< _T1, 3 , 1> g_versor_pos0_, g_versor_pos1_;
-  const std::vector< TriadData<_T1> > gyro_samples_;
-  const DataInterval<_T1> interval_pos01_;
+  const std::vector< TriadData_<_T1> > gyro_samples_;
+  const DataInterval_<_T1> interval_pos01_;
   const _T1 dt_;
   const bool optimize_bias_;
 };
 
 template <typename _T>
-  MultiPosCalibration<_T>::MultiPosCalibration() :
+  MultiPosCalibration_<_T>::MultiPosCalibration_() :
   g_mag_(9.81),
   min_num_intervals_(12),
   n_init_samples_(3000),
@@ -121,7 +121,7 @@ template <typename _T>
   verbose_output_(false){}
 
 template <typename _T>
-  bool MultiPosCalibration<_T>::calibrateAcc ( const std::vector< TriadData<_T> >& acc_samples )
+  bool MultiPosCalibration_<_T>::calibrateAcc ( const std::vector< TriadData_<_T> >& acc_samples )
 {
   cout<<"Accelerometers calibration: calibrating..."<<endl;
   
@@ -131,7 +131,7 @@ template <typename _T>
   
   int n_samps = acc_samples.size();
   
-  Eigen::Matrix<_T, 3, 1> acc_variance = dataVariance( acc_samples, DataInterval<_T>( 0, n_init_samples_) );
+  Eigen::Matrix<_T, 3, 1> acc_variance = dataVariance( acc_samples, DataInterval_<_T>( 0, n_init_samples_) );
   _T norm_th = acc_variance.norm();
 
   _T min_cost = std::numeric_limits< _T >::max();
@@ -140,8 +140,8 @@ template <typename _T>
   
   for (int th_mult = 2; th_mult <= 10; th_mult++)
   {
-    std::vector< imu_tk::DataInterval<_T> > static_intervals;
-    std::vector< imu_tk::TriadData<_T> > static_samples;
+    std::vector< imu_tk::DataInterval_<_T> > static_intervals;
+    std::vector< imu_tk::TriadData_<_T> > static_samples;
     std::vector< double > acc_calib_params(9);
     
     acc_calib_params[0] = init_acc_calib_.misYZ();
@@ -156,7 +156,7 @@ template <typename _T>
     acc_calib_params[7] = init_acc_calib_.biasY();
     acc_calib_params[8] = init_acc_calib_.biasZ();
     
-    std::vector< DataInterval<_T> > extracted_intervals;
+    std::vector< DataInterval_<_T> > extracted_intervals;
     staticIntervalsDetector ( acc_samples, th_mult*norm_th, static_intervals );
     extractIntervalsSamples ( acc_samples, static_intervals, 
                               static_samples, extracted_intervals,
@@ -211,7 +211,7 @@ template <typename _T>
     return false;
   }
 
-  acc_calib_ = CalibratedTriad<_T>( min_cost_calib_params[0],
+  acc_calib_ = CalibratedTriad_<_T>( min_cost_calib_params[0],
                                     min_cost_calib_params[1],
                                     min_cost_calib_params[2],
                                     0,0,0,
@@ -247,16 +247,16 @@ template <typename _T>
 }
 
 template <typename _T> 
-  bool MultiPosCalibration<_T>::calibrateAccGyro ( const vector< TriadData<_T> >& acc_samples, 
-                                                   const vector< TriadData<_T> >& gyro_samples )
+  bool MultiPosCalibration_<_T>::calibrateAccGyro ( const vector< TriadData_<_T> >& acc_samples, 
+                                                   const vector< TriadData_<_T> >& gyro_samples )
 {
   if( !calibrateAcc( acc_samples ) )
     return false;
   
   cout<<"Gyroscopes calibration: calibrating..."<<endl;
   
-  std::vector< TriadData<_T> > static_acc_means;
-  std::vector< DataInterval<_T> > extracted_intervals;
+  std::vector< TriadData_<_T> > static_acc_means;
+  std::vector< DataInterval_<_T> > extracted_intervals;
   extractIntervalsSamples ( calib_acc_samples_, min_cost_static_intervals_, 
                             static_acc_means, extracted_intervals,
                             interval_n_samples_, true );
@@ -264,9 +264,9 @@ template <typename _T>
   int n_static_pos = static_acc_means.size(), n_samps = gyro_samples.size();
   
   // Compute the gyroscopes biases in the (static) initialization interval
-  Eigen::Matrix<_T, 3, 1> gyro_bias = dataMean( gyro_samples, DataInterval<_T>( 0, n_init_samples_) );
+  Eigen::Matrix<_T, 3, 1> gyro_bias = dataMean( gyro_samples, DataInterval_<_T>( 0, n_init_samples_) );
   
-  gyro_calib_ = CalibratedTriad<_T>(0, 0, 0, 0, 0, 0, 
+  gyro_calib_ = CalibratedTriad_<_T>(0, 0, 0, 0, 0, 0, 
                                     1.0, 1.0, 1.0, 
                                     gyro_bias(0), gyro_bias(1), gyro_bias(2) );
   
@@ -332,7 +332,7 @@ template <typename _T>
 //         <<" v0 : "<< g_versor_pos0(0)<<" "<< g_versor_pos0(1)<<" "<< g_versor_pos0(2)
 //         <<" v1 : "<< g_versor_pos1(0)<<" "<< g_versor_pos1(1)<<" "<< g_versor_pos1(2)<<endl;
     
-    DataInterval<_T> gyro_interval(gyro_idx0, gyro_idx1);
+    DataInterval_<_T> gyro_interval(gyro_idx0, gyro_idx1);
     
     ceres::CostFunction* cost_function =
       MultiPosGyroResidual<_T>::Create ( g_versor_pos0, g_versor_pos1, calib_gyro_samples_,
@@ -349,7 +349,7 @@ template <typename _T>
   ceres::Solver::Summary summary;
 
   ceres::Solve ( options, &problem, &summary );
-  gyro_calib_ = CalibratedTriad<_T>( gyro_calib_params[0],
+  gyro_calib_ = CalibratedTriad_<_T>( gyro_calib_params[0],
                                      gyro_calib_params[1],
                                      gyro_calib_params[2],
                                      gyro_calib_params[3],
@@ -381,5 +381,5 @@ template <typename _T>
   return true;
 }
 
-template class MultiPosCalibration<double>;
-template class MultiPosCalibration<float>;
+template class MultiPosCalibration_<double>;
+template class MultiPosCalibration_<float>;

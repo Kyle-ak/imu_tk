@@ -28,7 +28,7 @@ namespace imu_tk
   * centered in \f$t\f$.
   */
 template <typename _T> 
-  void staticIntervalsDetector ( const std::vector< TriadData<_T> > &samples,
-                                 _T threshold, std::vector< DataInterval<_T> > &intervals,
+  void staticIntervalsDetector ( const std::vector< TriadData_<_T> > &samples,
+                                 _T threshold, std::vector< DataInterval_<_T> > &intervals,
                                  int win_size = 101 );
 }

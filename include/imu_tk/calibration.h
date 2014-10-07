@@ -43,21 +43,21 @@ namespace imu_tk
  * 
  * X' = T*K*X - B'
  * 
- * with B' = T*K*B'
+ * with B' = T*K*B
  * 
  * Without knowing the value of the bias (and with offset == 0), the calibrated reading X'' is simply:
  * 
  * X'' = T*K*X
  */
-template < typename _T = double > class CalibratedTriad
+template < typename _T > class CalibratedTriad_
 {
 public:
-  CalibratedTriad( const _T &mis_yz = _T(0), const _T &mis_zy = _T(0), const _T &mis_zx = _T(0), 
+  CalibratedTriad_( const _T &mis_yz = _T(0), const _T &mis_zy = _T(0), const _T &mis_zx = _T(0), 
                    const _T &mis_xz = _T(0), const _T &mis_xy = _T(0), const _T &mis_yx = _T(0), 
                    const _T &s_x = _T(1),    const _T &s_y = _T(1),    const _T &s_z = _T(1), 
                    const _T &b_x = _T(0),    const _T &b_y = _T(0),    const _T &b_z  = _T(0) );
  
-  ~CalibratedTriad(){};
+  ~CalibratedTriad_(){};
                
   inline _T misYZ() const { return -mis_mat_(0,1); };
   inline _T misZY() const { return mis_mat_(0,2); };
@@ -98,9 +98,9 @@ public:
     return ms_mat_*raw_data;
   };
   
-  inline TriadData<_T> normalize( const TriadData<_T> &raw_data ) const
+  inline TriadData_<_T> normalize( const TriadData_<_T> &raw_data ) const
   {
-    return TriadData<_T>( raw_data.timestamp(), normalize( raw_data.data()) );
+    return TriadData_<_T>( raw_data.timestamp(), normalize( raw_data.data()) );
   };
   
   inline Eigen::Matrix< _T, 3 , 1> unbiasNormalize( const Eigen::Matrix< _T, 3 , 1> &raw_data ) const
@@ -108,9 +108,9 @@ public:
     return ms_mat_*(raw_data - bias_vec_); 
   };
   
-  inline TriadData<_T> unbiasNormalize( const TriadData<_T> &raw_data ) const
+  inline TriadData_<_T> unbiasNormalize( const TriadData_<_T> &raw_data ) const
   {
-    return TriadData<_T>( raw_data.timestamp(), unbiasNormalize( raw_data.data()) );
+    return TriadData_<_T>( raw_data.timestamp(), unbiasNormalize( raw_data.data()) );
   };
   
   inline Eigen::Matrix< _T, 3 , 1> unbias( const Eigen::Matrix< _T, 3 , 1> &raw_data ) const
@@ -118,39 +118,41 @@ public:
     return raw_data - bias_vec_; 
   };
   
-  inline TriadData<_T> unbias( const TriadData<_T> &raw_data ) const
+  inline TriadData_<_T> unbias( const TriadData_<_T> &raw_data ) const
   {
-    return TriadData<_T>( raw_data.timestamp(), unbias( raw_data.data()) );
+    return TriadData_<_T>( raw_data.timestamp(), unbias( raw_data.data()) );
   };
   
 private:
 
   void update();
-  // Misalignment matrix
+  /** @brief Misalignment matrix */
   Eigen::Matrix< _T, 3 , 3> mis_mat_;
-  // Scale matrix
+  /** @brief Scale matrix */
   Eigen::Matrix< _T, 3 , 3> scale_mat_;
-  // Bias vector
+  /** @brief Bias vector */
   Eigen::Matrix< _T, 3 , 1> bias_vec_;
-  // Misalignment * scale matrix
+  /** @brief Misalignment * scale matrix */
   Eigen::Matrix< _T, 3 , 3> ms_mat_;
 };
 
-template <typename _T> std::ostream& operator<<(std::ostream& os, 
-                                                const imu_tk::CalibratedTriad<_T>& calib_triad);
+typedef CalibratedTriad_<double> CalibratedTriad;
 
-template <typename _T = double > class MultiPosCalibration
+template <typename _T> std::ostream& operator<<(std::ostream& os, 
+                                                const imu_tk::CalibratedTriad_<_T>& calib_triad);
+
+template <typename _T> class MultiPosCalibration_
 {
 public:
   
-  MultiPosCalibration();
-  ~MultiPosCalibration(){};
+  MultiPosCalibration_();
+  ~MultiPosCalibration_(){};
   
   _T gravityMagnitede() const { return g_mag_; };
   int numInitSamples() const { return n_init_samples_; };
   int intarvalsNumSamples() const { return interval_n_samples_; };
-  const CalibratedTriad<_T>& initAccCalibration(){ return init_acc_calib_; };
-  const CalibratedTriad<_T>& initGyroCalibration(){ return init_gyro_calib_; };
+  const CalibratedTriad_<_T>& initAccCalibration(){ return init_acc_calib_; };
+  const CalibratedTriad_<_T>& initGyroCalibration(){ return init_gyro_calib_; };
   bool accUseMeans() const { return acc_use_means_; };
   _T gyroDataPeriod() const{ return gyro_dt_; };
   bool optimizeGyroBias() const { return optimize_gyro_bias_; };
@@ -159,21 +161,21 @@ public:
   void setGravityMagnitude( _T g ){ g_mag_ = g; };
   void setNumInitSamples( int num ) { n_init_samples_ = num; };
   int setIntarvalsNumSamples( int num ) { interval_n_samples_ = num; };
-  void setInitAccCalibration( CalibratedTriad<_T> &init_calib ){ init_acc_calib_ = init_calib; };
-  void setInitGyroCalibration( CalibratedTriad<_T> &init_calib ){ init_gyro_calib_ = init_calib; };
+  void setInitAccCalibration( CalibratedTriad_<_T> &init_calib ){ init_acc_calib_ = init_calib; };
+  void setInitGyroCalibration( CalibratedTriad_<_T> &init_calib ){ init_gyro_calib_ = init_calib; };
   void enableAccUseMeans ( bool enabled ){ acc_use_means_ = enabled; };
   void setGyroDataPeriod( _T dt ){ gyro_dt_ = dt; };
   bool enableGyroBiasOptimization( bool enabled  ) { optimize_gyro_bias_ = enabled; };
   void enableVerboseOutput( bool enabled ){ verbose_output_ = enabled; };
   
-  bool calibrateAcc( const std::vector< TriadData<_T> > &acc_samples );
-  bool calibrateAccGyro( const std::vector< TriadData<_T> > &acc_samples, 
-                         const std::vector< TriadData<_T> > &gyro_samples );
+  bool calibrateAcc( const std::vector< TriadData_<_T> > &acc_samples );
+  bool calibrateAccGyro( const std::vector< TriadData_<_T> > &acc_samples, 
+                         const std::vector< TriadData_<_T> > &gyro_samples );
 
-  const CalibratedTriad<_T>& getAccCalib() const  { return acc_calib_; };
-  const CalibratedTriad<_T>& getGyroCalib() const  { return gyro_calib_; };
-  const std::vector< TriadData<_T> >& getCalibAccSamples() const { return calib_acc_samples_; };
-  const std::vector< TriadData<_T> >& getCalibGyroSamples() const { return calib_gyro_samples_; };
+  const CalibratedTriad_<_T>& getAccCalib() const  { return acc_calib_; };
+  const CalibratedTriad_<_T>& getGyroCalib() const  { return gyro_calib_; };
+  const std::vector< TriadData_<_T> >& getCalibAccSamples() const { return calib_acc_samples_; };
+  const std::vector< TriadData_<_T> >& getCalibGyroSamples() const { return calib_gyro_samples_; };
   
 private:
   
@@ -184,20 +186,22 @@ private:
   bool acc_use_means_;
   _T gyro_dt_;
   bool optimize_gyro_bias_;
-  std::vector< DataInterval<_T> > min_cost_static_intervals_;
-  CalibratedTriad<_T> init_acc_calib_, init_gyro_calib_;
-  CalibratedTriad<_T> acc_calib_, gyro_calib_;
-  std::vector< TriadData<_T> > calib_acc_samples_, calib_gyro_samples_;
+  std::vector< DataInterval_<_T> > min_cost_static_intervals_;
+  CalibratedTriad_<_T> init_acc_calib_, init_gyro_calib_;
+  CalibratedTriad_<_T> acc_calib_, gyro_calib_;
+  std::vector< TriadData_<_T> > calib_acc_samples_, calib_gyro_samples_;
   
   bool verbose_output_;
 };
+
+typedef MultiPosCalibration_<double> MultiPosCalibration;
 
 }
 
 /* Implementations */
 
 template <typename _T> 
-  imu_tk::CalibratedTriad<_T>::CalibratedTriad( const _T &mis_yz, const _T &mis_zy, const _T &mis_zx, 
+  imu_tk::CalibratedTriad_<_T>::CalibratedTriad_( const _T &mis_yz, const _T &mis_zy, const _T &mis_zx, 
                                                 const _T &mis_xz, const _T &mis_xy, const _T &mis_yx, 
                                                 const _T &s_x, const _T &s_y, const _T &s_z, 
                                                 const _T &b_x, const _T &b_y, const _T &b_z )
@@ -216,7 +220,7 @@ template <typename _T>
 }
 
 template <typename _T> 
-  bool imu_tk::CalibratedTriad<_T>::load( std::string filename )
+  bool imu_tk::CalibratedTriad_<_T>::load( std::string filename )
 {
   std::ifstream file( filename.data() );
   if (file.is_open())
@@ -246,7 +250,7 @@ template <typename _T>
 }
 
 template <typename _T> 
-  bool imu_tk::CalibratedTriad<_T>::save( std::string filename ) const
+  bool imu_tk::CalibratedTriad_<_T>::save( std::string filename ) const
 {
   std::ofstream file( filename.data() );
   if (file.is_open())
@@ -260,13 +264,13 @@ template <typename _T>
   return false;  
 }
 
-template <typename _T> void imu_tk::CalibratedTriad<_T>::update()
+template <typename _T> void imu_tk::CalibratedTriad_<_T>::update()
 {
   ms_mat_ = mis_mat_*scale_mat_;
 }
 
 template <typename _T> std::ostream& imu_tk::operator<<(std::ostream& os, 
-                                                        const imu_tk::CalibratedTriad<_T>& calib_triad)
+                                                        const imu_tk::CalibratedTriad_<_T>& calib_triad)
 {
   os<<"Misalignment Matrix"<<std::endl;
   os<<calib_triad.getMisalignmentMatrix()<<std::endl;
