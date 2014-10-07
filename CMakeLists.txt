@@ -21,7 +21,7 @@ add_definitions(${PCL_DEFINITIONS})
 
 set (IMU_TK_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
 set (IMU_TK_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib PARENT_SCOPE)
-set (IMU_TK_LIBS cv_ext PARENT_SCOPE)
+set (IMU_TK_LIBS imu_tk PARENT_SCOPE)
 
 include_directories(./include
                     /usr/include
