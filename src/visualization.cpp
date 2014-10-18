@@ -147,6 +147,7 @@ template <typename _T>
   vis->getHandle()->removeShape(x_axes_name);
   vis->getHandle()->removeShape(y_axes_name);
   vis->getHandle()->removeShape(z_axes_name);
+  vis->getHandle()->removeText3D(name);
   
   vis->getHandle()->addLine(pcl::PointXYZ(t[0],t[1],t[2]), 
                             pcl::PointXYZ(t[0] + x_axes[0], t[1] + x_axes[1], t[2] + x_axes[2]), 1, 0, 0, x_axes_name);
@@ -154,6 +155,8 @@ template <typename _T>
                             pcl::PointXYZ(t[0] + y_axes[0], t[1] + y_axes[1], t[2] + y_axes[2]), 0, 1, 0, y_axes_name);
   vis->getHandle()->addLine(pcl::PointXYZ(t[0],t[1],t[2]), 
                             pcl::PointXYZ(t[0] + z_axes[0], t[1] + z_axes[1], t[2] + z_axes[2]), 0, 0, 1, z_axes_name);
+  
+  vis->getHandle()->addText3D (name, pcl::PointXYZ(t[0],t[1],t[2]), 0.2 );
 }
 
 template <typename _T> 

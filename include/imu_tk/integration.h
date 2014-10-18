@@ -10,6 +10,9 @@
 namespace imu_tk
 {
  
+template <typename _T> inline void normalizeQuaternion( Eigen::Matrix< _T, 4, 1> &quat );
+template <typename _T> inline void normalizeQuaternion( _T quat[4] );
+
 template <typename _T> inline void quatIntegrationStepRK4( const Eigen::Matrix< _T, 4, 1> &quat, 
                                                            const Eigen::Matrix< _T, 3, 1> &omega0, 
                                                            const Eigen::Matrix< _T, 3, 1> &omega1, 
@@ -31,6 +34,18 @@ template <typename _T> void integrateGyroInterval( const std::vector< TriadData_
 }
 
 /* Implementation */
+
+template <typename _T> inline void imu_tk::normalizeQuaternion ( Eigen::Matrix< _T, 4 , 1  >& quat )
+{
+  _T quat_norm = quat.squaredNorm();
+  quat /= quat_norm;
+}
+
+template <typename _T> inline void imu_tk::normalizeQuaternion ( _T quat[4] )
+{
+  Eigen::Matrix< _T, 4 , 1  > tmp_q = Eigen::Map< Eigen::Matrix< _T, 4 , 1  > >(quat);
+  imu_tk::normalizeQuaternion ( tmp_q );
+}
 
 template <typename _T> 
   static inline void computeOmegaSkew( const Eigen::Matrix< _T, 3, 1> &omega, 
