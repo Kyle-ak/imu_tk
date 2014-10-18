@@ -37,8 +37,7 @@ template <typename _T> void integrateGyroInterval( const std::vector< TriadData_
 
 template <typename _T> inline void imu_tk::normalizeQuaternion ( Eigen::Matrix< _T, 4 , 1  >& quat )
 {
-  _T quat_norm = quat.squaredNorm();
-  quat /= quat_norm;
+  quat /= quat.squaredNorm();
 }
 
 template <typename _T> inline void imu_tk::normalizeQuaternion ( _T quat[4] )
@@ -83,7 +82,7 @@ template <typename _T>
   k4 = _T(0.5)*omega_skew*tmp_q;
   _T mult1 = _T(1.0)/_T(6.0), mult2 = _T(1.0)/_T(3.0);
   quat_res = quat + dt*(mult1*k1 + mult2*k2 + mult2*k3 + mult1*k4);
-  quat_res /= quat_res.norm();
+  normalizeQuaternion(quat_res);
 }
 
 template <typename _T> 
