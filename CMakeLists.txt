@@ -14,7 +14,7 @@ endif(NOT DEFINED BUILD_IMU_TK_EXAMPLES)
 message("${CMAKE_CXX_FLAGS_RELEASE}")
 
 find_package(Boost REQUIRED)  
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(PCL 1.6 REQUIRED)
 add_definitions(${PCL_DEFINITIONS})
