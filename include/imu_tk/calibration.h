@@ -163,10 +163,10 @@ public:
   int setIntarvalsNumSamples( int num ) { interval_n_samples_ = num; };
   void setInitAccCalibration( CalibratedTriad_<_T> &init_calib ){ init_acc_calib_ = init_calib; };
   void setInitGyroCalibration( CalibratedTriad_<_T> &init_calib ){ init_gyro_calib_ = init_calib; };
-  void enableAccUseMeans ( bool enabled ){ acc_use_means_ = enabled; };
+  void enableAccUseMeans ( bool enable ){ acc_use_means_ = enable; };
   void setGyroDataPeriod( _T dt ){ gyro_dt_ = dt; };
-  bool enableGyroBiasOptimization( bool enabled  ) { optimize_gyro_bias_ = enabled; };
-  void enableVerboseOutput( bool enabled ){ verbose_output_ = enabled; };
+  bool enableGyroBiasOptimization( bool enable  ) { optimize_gyro_bias_ = enable; };
+  void enableVerboseOutput( bool enable ){ verbose_output_ = enable; };
   
   bool calibrateAcc( const std::vector< TriadData_<_T> > &acc_samples );
   bool calibrateAccGyro( const std::vector< TriadData_<_T> > &acc_samples, 
