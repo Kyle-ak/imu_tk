@@ -48,7 +48,7 @@ template <typename _T1> struct MultiPosGyroResidual
   MultiPosGyroResidual( const Eigen::Matrix< _T1, 3 , 1> &g_versor_pos0, 
                         const Eigen::Matrix< _T1, 3 , 1> &g_versor_pos1,
                         const std::vector< TriadData_<_T1> > &gyro_samples, 
-                        const DataInterval_<_T1> &gyro_interval_pos01, 
+                        const DataInterval &gyro_interval_pos01, 
                         _T1 dt, bool optimize_bias) :
 
   g_versor_pos0_(g_versor_pos0), 
@@ -89,7 +89,7 @@ template <typename _T1> struct MultiPosGyroResidual
   static ceres::CostFunction* Create ( const Eigen::Matrix< _T1, 3 , 1> &g_versor_pos0, 
                                        const Eigen::Matrix< _T1, 3 , 1> &g_versor_pos1,
                                        const std::vector< TriadData_<_T1> > &gyro_samples, 
-                                       const DataInterval_<_T1> &gyro_interval_pos01, 
+                                       const DataInterval &gyro_interval_pos01, 
                                        _T1 dt, bool optimize_bias )
   {
     if( optimize_bias )
@@ -104,7 +104,7 @@ template <typename _T1> struct MultiPosGyroResidual
   
   const Eigen::Matrix< _T1, 3 , 1> g_versor_pos0_, g_versor_pos1_;
   const std::vector< TriadData_<_T1> > gyro_samples_;
-  const DataInterval_<_T1> interval_pos01_;
+  const DataInterval interval_pos01_;
   const _T1 dt_;
   const bool optimize_bias_;
 };
@@ -131,7 +131,7 @@ template <typename _T>
   
   int n_samps = acc_samples.size();
   
-  Eigen::Matrix<_T, 3, 1> acc_variance = dataVariance( acc_samples, DataInterval_<_T>( 0, n_init_samples_) );
+  Eigen::Matrix<_T, 3, 1> acc_variance = dataVariance( acc_samples, DataInterval( 0, n_init_samples_) );
   _T norm_th = acc_variance.norm();
 
   _T min_cost = std::numeric_limits< _T >::max();
@@ -140,7 +140,7 @@ template <typename _T>
   
   for (int th_mult = 2; th_mult <= 10; th_mult++)
   {
-    std::vector< imu_tk::DataInterval_<_T> > static_intervals;
+    std::vector< imu_tk::DataInterval > static_intervals;
     std::vector< imu_tk::TriadData_<_T> > static_samples;
     std::vector< double > acc_calib_params(9);
     
@@ -156,7 +156,7 @@ template <typename _T>
     acc_calib_params[7] = init_acc_calib_.biasY();
     acc_calib_params[8] = init_acc_calib_.biasZ();
     
-    std::vector< DataInterval_<_T> > extracted_intervals;
+    std::vector< DataInterval > extracted_intervals;
     staticIntervalsDetector ( acc_samples, th_mult*norm_th, static_intervals );
     extractIntervalsSamples ( acc_samples, static_intervals, 
                               static_samples, extracted_intervals,
@@ -201,7 +201,7 @@ template <typename _T>
       min_cost_static_intervals_ = static_intervals;
       min_cost_calib_params = acc_calib_params;
     }
-    if( verbose_output_) cout<<"residual "<<summary.final_cost<<endl;
+    cout<<"residual "<<summary.final_cost<<endl;
   }
   
   if( min_cost_th < 0 )
@@ -212,15 +212,15 @@ template <typename _T>
   }
 
   acc_calib_ = CalibratedTriad_<_T>( min_cost_calib_params[0],
-                                    min_cost_calib_params[1],
-                                    min_cost_calib_params[2],
-                                    0,0,0,
-                                    min_cost_calib_params[3],
-                                    min_cost_calib_params[4],
-                                    min_cost_calib_params[5],
-                                    min_cost_calib_params[6],
-                                    min_cost_calib_params[7],
-                                    min_cost_calib_params[8] );
+                                     min_cost_calib_params[1],
+                                     min_cost_calib_params[2],
+                                     0,0,0,
+                                     min_cost_calib_params[3],
+                                     min_cost_calib_params[4],
+                                     min_cost_calib_params[5],
+                                     min_cost_calib_params[6],
+                                     min_cost_calib_params[7],
+                                     min_cost_calib_params[8] );
   
   calib_acc_samples_.reserve(n_samps);
   
@@ -256,7 +256,7 @@ template <typename _T>
   cout<<"Gyroscopes calibration: calibrating..."<<endl;
   
   std::vector< TriadData_<_T> > static_acc_means;
-  std::vector< DataInterval_<_T> > extracted_intervals;
+  std::vector< DataInterval > extracted_intervals;
   extractIntervalsSamples ( calib_acc_samples_, min_cost_static_intervals_, 
                             static_acc_means, extracted_intervals,
                             interval_n_samples_, true );
@@ -264,7 +264,7 @@ template <typename _T>
   int n_static_pos = static_acc_means.size(), n_samps = gyro_samples.size();
   
   // Compute the gyroscopes biases in the (static) initialization interval
-  Eigen::Matrix<_T, 3, 1> gyro_bias = dataMean( gyro_samples, DataInterval_<_T>( 0, n_init_samples_) );
+  Eigen::Matrix<_T, 3, 1> gyro_bias = dataMean( gyro_samples, DataInterval( 0, n_init_samples_) );
   
   gyro_calib_ = CalibratedTriad_<_T>(0, 0, 0, 0, 0, 0, 
                                     1.0, 1.0, 1.0, 
@@ -306,8 +306,8 @@ template <typename _T>
     g_versor_pos1 /= g_versor_pos1.norm();
     
     int gyro_idx0 = -1, gyro_idx1 = -1;
-    _T ts0 = extracted_intervals[i].end_ts, 
-       ts1 = extracted_intervals[i + 1].start_ts;
+    _T ts0 = calib_acc_samples_[extracted_intervals[i].end_idx].timestamp(), 
+       ts1 = calib_acc_samples_[extracted_intervals[i + 1].start_idx].timestamp();
      
     // Assume monotone signal time
     for( ; t_idx < n_samps; t_idx++ )
@@ -332,7 +332,7 @@ template <typename _T>
 //         <<" v0 : "<< g_versor_pos0(0)<<" "<< g_versor_pos0(1)<<" "<< g_versor_pos0(2)
 //         <<" v1 : "<< g_versor_pos1(0)<<" "<< g_versor_pos1(1)<<" "<< g_versor_pos1(2)<<endl;
     
-    DataInterval_<_T> gyro_interval(gyro_idx0, gyro_idx1);
+    DataInterval gyro_interval(gyro_idx0, gyro_idx1);
     
     ceres::CostFunction* cost_function =
       MultiPosGyroResidual<_T>::Create ( g_versor_pos0, g_versor_pos1, calib_gyro_samples_,
@@ -375,7 +375,7 @@ template <typename _T>
         <<"Gyroscopes calibration: inverse scale factors:"<<endl
         <<1.0/gyro_calib_.scaleX()<<endl
         <<1.0/gyro_calib_.scaleY()<<endl
-        <<1.0/gyro_calib_.scaleZ()<<endl;    
+        <<1.0/gyro_calib_.scaleZ()<<endl;
   }
   
   return true;

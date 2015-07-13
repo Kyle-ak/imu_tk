@@ -54,7 +54,7 @@ void imu_tk::waitForKey()
 
 template <typename _T> 
   void imu_tk::plotSamples ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<_T> >& samples, 
-                             imu_tk::DataInterval_<_T> range )
+                             imu_tk::DataInterval range )
 {
   range = imu_tk::checkInterval( samples, range );
   int n_pts = range.end_idx - range.start_idx + 1;;
@@ -79,8 +79,8 @@ template <typename _T>
 
 template <typename _T> 
   void imu_tk::plotIntervals ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<_T> >& samples, 
-                               const std::vector< imu_tk::DataInterval_<_T> >& intervals,
-                               imu_tk::DataInterval_<_T> range )
+                               const std::vector< imu_tk::DataInterval >& intervals,
+                               imu_tk::DataInterval range )
 {
   range = imu_tk::checkInterval( samples, range );
   int n_pts = range.end_idx - range.start_idx + 1, 
@@ -175,15 +175,15 @@ void imu_tk::blockVisualizer(imu_tk::VisualizerPtr vis, int time )
 }
 
 template void imu_tk::plotSamples<double> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<double> >& samples, 
-                                            imu_tk::DataInterval_<double> range );
+                                            imu_tk::DataInterval range );
 template void imu_tk::plotSamples<float> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<float> >& samples, 
-                                           imu_tk::DataInterval_<float> range );
+                                           imu_tk::DataInterval range );
 template void imu_tk::plotIntervals<double> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<double> >& samples, 
-                                              const std::vector< imu_tk::DataInterval_<double> >& intervals,
-                                              imu_tk::DataInterval_<double> range );
+                                              const std::vector< imu_tk::DataInterval >& intervals,
+                                              imu_tk::DataInterval range );
 template void imu_tk::plotIntervals<float> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<float> >& samples, 
-                                             const std::vector< imu_tk::DataInterval_<float> >& intervals,
-                                             imu_tk::DataInterval_<float> range );
+                                             const std::vector< imu_tk::DataInterval >& intervals,
+                                             imu_tk::DataInterval range );
 
 
 template void imu_tk::showFrame<double>( imu_tk::VisualizerPtr vis, const double quat[4], const double t[4], 

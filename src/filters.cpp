@@ -4,7 +4,7 @@ using namespace Eigen;
 
 template <typename _T> 
   void imu_tk::staticIntervalsDetector ( const std::vector< imu_tk::TriadData_<_T> >& samples, 
-                                         _T threshold, std::vector< imu_tk::DataInterval_<_T> >& intervals, 
+                                         _T threshold, std::vector< imu_tk::DataInterval >& intervals, 
                                          int win_size )
 {
   if ( win_size < 11 ) win_size = 11;
@@ -18,11 +18,11 @@ template <typename _T>
   intervals.clear();
   
   bool look_for_start = true;
-  imu_tk::DataInterval_<_T> current_interval;
+  imu_tk::DataInterval current_interval;
   
   for( int i = h; i < samples.size() - h; i++ )
   {
-    Matrix< _T, 3, 1> variance = dataVariance( samples, DataInterval_<_T>( i - h, i + h) );
+    Matrix< _T, 3, 1> variance = dataVariance( samples, DataInterval( i - h, i + h) );
     _T norm = variance.norm();
     
     if( look_for_start )
@@ -30,7 +30,6 @@ template <typename _T>
       if (norm < threshold)
       {
         current_interval.start_idx = i;
-        current_interval.start_ts = samples[i].timestamp();
         look_for_start = false;
       }
     }
@@ -38,8 +37,7 @@ template <typename _T>
     {
       if (norm >= threshold)
       {
-        current_interval.end_idx = i;
-        current_interval.end_ts = samples[i].timestamp();
+        current_interval.end_idx = i - 1;
         look_for_start = true;
         intervals.push_back(current_interval);
       }
@@ -50,14 +48,14 @@ template <typename _T>
   if( !look_for_start )
   {
     current_interval.end_idx = samples.size() - h - 1;
-    current_interval.end_ts = samples[current_interval.end_idx].timestamp();
+    //current_interval.end_ts = samples[current_interval.end_idx].timestamp();
     intervals.push_back(current_interval);
   }
 }
 
 template void imu_tk::staticIntervalsDetector<double> ( const std::vector< TriadData_<double> > &samples,
-                                                        double threshold, std::vector< DataInterval_<double> > &intervals,
+                                                        double threshold, std::vector< DataInterval > &intervals,
                                                         int win_size = 101 );
 template void imu_tk::staticIntervalsDetector<float> ( const std::vector< TriadData_<float> > &samples,
-                                                       float threshold, std::vector< DataInterval_<float> > &intervals,
+                                                       float threshold, std::vector< DataInterval > &intervals,
                                                        int win_size = 101 );

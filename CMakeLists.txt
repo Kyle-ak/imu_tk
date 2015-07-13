@@ -8,7 +8,7 @@ if(NOT DEFINED CMAKE_BUILD_TYPE)
 endif(NOT DEFINED CMAKE_BUILD_TYPE) 
 
 if(NOT DEFINED BUILD_IMU_TK_EXAMPLES)
-  set(BUILD_IMU_TK_EXAMPLES "OFF")
+  set(BUILD_IMU_TK_EXAMPLES "ON")
 endif(NOT DEFINED BUILD_IMU_TK_EXAMPLES)
 
 message("${CMAKE_CXX_FLAGS_RELEASE}")
@@ -52,6 +52,21 @@ target_link_libraries( test_phone_calib
                        ${CERES_LIBRARIES})
                        
 set_target_properties( test_phone_calib PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
+
+add_executable(test_imu_calib2 apps/test_imu_calib2.cpp)
+target_link_libraries( test_imu_calib2
+                       imu_tk
+                       ${CERES_LIBRARIES})
+                       
+set_target_properties( test_imu_calib2 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
+add_executable(test_imu_calib3 apps/test_imu_calib3.cpp)
+target_link_libraries( test_imu_calib3
+                       imu_tk
+                       ${CERES_LIBRARIES})
+                       
+set_target_properties( test_imu_calib3 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 add_executable(test_integration apps/test_integration.cpp)
 target_link_libraries( test_integration

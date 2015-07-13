@@ -93,10 +93,13 @@ int main(int argc, char** argv)
     
     res *= 180/M_PI;
     res_calib *= 180/M_PI;
-    double interval_len = static_intervals[i].start_ts - static_intervals[i-n_intervals].end_ts;
+    double ts0 =  acc_data_test[static_intervals[i-n_intervals].end_idx].timestamp(),
+           ts1 = acc_data_test[static_intervals[i].start_idx].timestamp();
+    
+    double interval_len = ts1 - ts0;
     cout<<"Interval len:"<<interval_len
-        <<" from "<<static_intervals[i-n_intervals].end_ts - gyro_data_test[0].timestamp()
-        <<" to "<<static_intervals[i].start_ts - gyro_data_test[0].timestamp()<<endl;
+        <<" from "<<ts0 - gyro_data_test[0].timestamp()
+        <<" to "<<ts1 - gyro_data_test[0].timestamp()<<endl;
     cout<<"Uncalib : "<<res.norm() <<endl;
     cout<<"Calib   : "<<res_calib.norm()<<endl<<endl;
 

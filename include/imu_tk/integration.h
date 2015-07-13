@@ -9,27 +9,73 @@
 
 namespace imu_tk
 {
- 
+/** @brief Normalize a input quaternion to an unit vector 
+ * 
+ * @param[in,out] quat The Eigen 4D vector representing the quaternion to be normlized
+ */
 template <typename _T> inline void normalizeQuaternion( Eigen::Matrix< _T, 4, 1> &quat );
+
+/** @brief Normalize a input quaternion to an unit vector 
+ * 
+ * @param[in,out] quat The 4D array representing the quaternion to be normlized
+ */
 template <typename _T> inline void normalizeQuaternion( _T quat[4] );
 
+/** @brief Perform a RK4 Runge-Kutta integration step
+ * 
+ * @param quat The input Eigen 4D vector representing the initial rotation
+ * @param omega0 Initial rotational velocity at time t0
+ * @param omega1 Final rotational velocity at time t1
+ * @param dt Time step (t1 - t0).
+ * @param[out] quat_res Resulting final rotation
+ */
 template <typename _T> inline void quatIntegrationStepRK4( const Eigen::Matrix< _T, 4, 1> &quat, 
                                                            const Eigen::Matrix< _T, 3, 1> &omega0, 
                                                            const Eigen::Matrix< _T, 3, 1> &omega1, 
                                                            const _T &dt, Eigen::Matrix< _T, 4, 1> &quat_res );
 
+/** @brief Perform a RK4 Runge-Kutta integration step
+ * 
+ * @param quat The input 4D array representing the initial rotation
+ * @param omega0 Initial rotational velocity at time t0
+ * @param omega1 Final rotational velocity at time t1
+ * @param dt Time step (t1 - t0).
+ * @param[out] quat_res Resulting final rotation
+ */
 template <typename _T> inline void quatIntegrationStepRK4( const _T quat[4], 
                                                            const _T omega0[3], 
                                                            const _T omega1[3], 
                                                            const _T &dt, _T quat_res[4] );
 
+/** @brief Integrate a sequence of rotational velocities using the RK4 
+ *         Runge-Kutta discrete integration method. The initial rotation is assumed to be the
+ *         identity quaternion.
+ * 
+ * @param gyro_samples Input gyroscope signal (rotational velocity samples vector)
+ * @param[out] quat_res Resulting final rotation quaternion
+ * @param dt Fixed time step (t1 - t0) between samples. If is -1, the sample timestamps are used instead.
+ * @param interval Data interval where to compute the integration. If this interval is not valid,
+ *                 i.e., one of the two indices is -1, the integration is computed for the whole data
+ *                 sequence.
+ */
 template <typename _T> void integrateGyroInterval( const std::vector< TriadData_<_T> > &gyro_samples, 
                                                    Eigen::Matrix< _T, 4, 1> &quat_res, _T data_dt = _T(-1),
-                                                   const DataInterval_<_T> &interval = DataInterval_<_T> (-1, -1) );
+                                                   const DataInterval &interval = DataInterval() );
 
+/** @brief Integrate a sequence of rotational velocities using the RK4 
+ *         Runge-Kutta discrete integration method. The initial rotation is assumed to be the
+ *         identity rotation matrix.
+ * 
+ * @param gyro_samples Input gyroscope signal (rotational velocity samples vector)
+ * @param[out] quat_res Resulting final rotation matrix
+ * @param dt Fixed time step (t1 - t0) between samples. If is -1, the sample timestamps are used instead.
+ * @param interval Data interval where to compute the integration. If this interval is not valid,
+ *                 i.e., one of the two indices is -1, the integration is computed for the whole data
+ *                 sequence.
+ */
 template <typename _T> void integrateGyroInterval( const std::vector< TriadData_<_T> > &gyro_samples, 
                                                    Eigen::Matrix< _T, 3, 3> &rot_res, _T data_dt = _T(-1),
-                                                   const DataInterval_<_T> &interval = DataInterval_<_T> (-1, -1) );
+                                                   const DataInterval &interval = DataInterval() );
 
 }
 
@@ -105,9 +151,9 @@ template <typename _T>
 
 template <typename _T> void imu_tk::integrateGyroInterval( const std::vector< TriadData_<_T> > &gyro_samples, 
                                                            Eigen::Matrix< _T, 4, 1> &quat_res,
-                                                           _T data_dt, const DataInterval_<_T> &interval )
+                                                           _T data_dt, const DataInterval &interval )
 {
-  DataInterval_<_T> rev_interval =  checkInterval( gyro_samples, interval );
+  DataInterval rev_interval =  checkInterval( gyro_samples, interval );
 
   quat_res = Eigen::Matrix< _T, 4, 1>(_T(1.0), _T(0), _T(0), _T(0)); // Identity quaternion
   
@@ -125,7 +171,7 @@ template <typename _T> void imu_tk::integrateGyroInterval( const std::vector< Tr
 
 template <typename _T> void imu_tk::integrateGyroInterval( const std::vector< TriadData_<_T> >& gyro_samples, 
                                                            Eigen::Matrix< _T, 3 , 3  >& rot_res, 
-                                                           _T data_dt, const DataInterval_<_T>& interval )
+                                                           _T data_dt, const DataInterval& interval )
 {
   Eigen::Matrix< _T, 4, 1> quat_res;
   integrateGyroInterval( gyro_samples, quat_res, data_dt, interval );

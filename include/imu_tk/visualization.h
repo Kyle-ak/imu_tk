@@ -20,11 +20,11 @@ void waitForKey();
 
 template <typename _T> 
   void plotSamples( PlotPtr plot, const std::vector< TriadData_<_T> > &samples,
-                    DataInterval_<_T> range = DataInterval_<_T> ( -1, -1 ) );
+                    DataInterval range = DataInterval() );
 template <typename _T> 
   void plotIntervals( PlotPtr plot, const std::vector< TriadData_<_T> > &samples,
-                      const std::vector< DataInterval_<_T> > &intervals,
-                      DataInterval_<_T> range = DataInterval_<_T> ( -1, -1 ) );
+                      const std::vector< DataInterval > &intervals,
+                      DataInterval range = DataInterval() );
   
 template <typename _T> 
   void showFrame( VisualizerPtr vis, const _T quat[4], const _T t[4], std::string name = "frame" );

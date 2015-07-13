@@ -13,9 +13,10 @@ namespace imu_tk
   * 
   * @param samples Input 3D signal (e.g, the acceleremeter readings)
   * @param threshold Threshold used in the classification
-  * @param intervals  Ouput detected static intervals
-  * @param win_size Size of the sliding window used to compute the local variance magnitude
-  * 
+  * @param[out] intervals  Ouput detected static intervals
+  * @param win_size Size of the sliding window (i.e., number of samples) 
+  *                 used to compute the local variance magnitude. It should be equal or
+  *                 greater than 11
   * 
   * 
   * The variance magnitude is a scalar computed in a temporal sliding window of size 
@@ -29,6 +30,6 @@ namespace imu_tk
   */
 template <typename _T> 
   void staticIntervalsDetector ( const std::vector< TriadData_<_T> > &samples,
-                                 _T threshold, std::vector< DataInterval_<_T> > &intervals,
+                                 _T threshold, std::vector< DataInterval > &intervals,
                                  int win_size = 101 );
 }
