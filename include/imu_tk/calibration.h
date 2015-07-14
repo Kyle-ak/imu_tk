@@ -205,9 +205,9 @@ public:
    *         used in the calibration (i.e., the gravity measured in
    *         the place where the calibration dataset has been acquired) */
   _T gravityMagnitede() const { return g_mag_; };
-  
-  /** @brief Provides the number of data samples that belong to the initials static interval */
-  int numInitSamples() const { return n_init_samples_; };
+
+  /** @brief Provides the duration in seconds of the initial static interval */
+  _T initStaticIntervalDuration() const { return init_interval_duration_; };
   
   /** @brief Provides the number of data samples to be extracted from each detected static intervals */
   int intarvalsNumSamples() const { return interval_n_samples_; };
@@ -244,8 +244,8 @@ public:
    */
   void setGravityMagnitude( _T g ){ g_mag_ = g; };
   
-  /** @brief Set the number of data samples that belong to the initials static interval */
-  void setNumInitSamples( int num ) { n_init_samples_ = num; };
+  /** @brief Set the duration in seconds of the initial static interval. Default 30 seconds. */
+  _T setInitStaticIntervalDuration( _T duration ) { init_interval_duration_ = duration; };
   
   /** @brief Set the number of data samples to be extracted from each detected static intervals.
    *         Default is 100.  */
@@ -317,7 +317,7 @@ private:
   
   _T g_mag_;
   const int min_num_intervals_;
-  int n_init_samples_;
+  _T init_interval_duration_;
   int interval_n_samples_;
   bool acc_use_means_;
   _T gyro_dt_;

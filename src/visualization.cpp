@@ -2,23 +2,152 @@
 #include <ceres/rotation.h>
 
 #include "imu_tk/visualization.h"
-#include "imu_tk/gnuplot_i.h"
+#include <cstdio>
+#include <sstream>
 
-class imu_tk::Plot
+using namespace imu_tk;
+
+class Plot::PlotImpl
 {
 public:
-  Plot(){ hplot_ = gnuplot_init(); };
-  ~Plot(){ gnuplot_close(hplot_); };
   
-  gnuplot_ctrl *getHandle() {return hplot_; };
+  PlotImpl()
+  { 
+    gnuplot_pipe_ = popen("gnuplot", "w");
+    if( gnuplot_pipe_ == NULL )
+      std::cerr<<"WARNING : missing gnuplot application!"<<std::endl;
+  };
+  
+  ~PlotImpl()
+  { 
+    if( gnuplot_pipe_ != NULL )
+      pclose( gnuplot_pipe_ );
+  };
+  
+  bool ready() const { return gnuplot_pipe_ != NULL; };
+  void write( const std::string &str )
+  {
+    if( gnuplot_pipe_ != NULL )
+    {
+      fprintf( gnuplot_pipe_, "%s\n", str.c_str() );
+      fflush( gnuplot_pipe_ );
+    }
+  };  
+  
 private:
-  gnuplot_ctrl *hplot_;
+  
+  FILE *gnuplot_pipe_;
 };
 
-imu_tk::PlotPtr imu_tk::createPlot()
+Plot::Plot()
 {
-  return imu_tk::PlotPtr ( new imu_tk::Plot() );
+  plot_impl_ptr_ = boost::shared_ptr< PlotImpl > ( new PlotImpl() );
 }
+
+template <typename _T> 
+  void Plot::plotSamples ( const std::vector< TriadData_<_T> >& samples, 
+                                   DataInterval range )
+{
+  if( !plot_impl_ptr_->ready() )
+    return;
+  
+  range = checkInterval( samples, range );
+  
+  std::stringstream strs;
+  strs<<"plot '-' title 'x' with lines, "
+      <<"'-' title 'y' with lines, "
+      <<"'-' title 'z' with lines"<<std::endl;
+   
+  _T base_time = samples[0].timestamp();
+  for( int i = range.start_idx; i <= range.end_idx; i++)
+    strs<<double(samples[i].timestamp() - base_time)<<" "<<double(samples[i].x())<<std::endl;
+  strs<<"EOF"<<std::endl;
+  for( int i = range.start_idx; i <= range.end_idx; i++)
+    strs<<double(samples[i].timestamp() - base_time)<<" "<<double(samples[i].y())<<std::endl;
+  strs<<"EOF"<<std::endl;
+  for( int i = range.start_idx; i <= range.end_idx; i++)
+    strs<<double(samples[i].timestamp() - base_time)<<" "<<double(samples[i].z())<<std::endl;
+  strs<<"EOF"<<std::endl;
+  plot_impl_ptr_->write( strs.str() );
+}
+
+template <typename _T> 
+  void Plot::plotIntervals ( const std::vector< TriadData_< _T > >& samples,
+                                     const std::vector< DataInterval >& intervals, 
+                                     DataInterval range )
+{
+   if( !plot_impl_ptr_->ready() )
+    return;
+   
+  range = checkInterval( samples, range );
+  int n_pts = range.end_idx - range.start_idx + 1, 
+              n_intervals = intervals.size();
+  
+  double max = 0, mean = 0;
+  for( int i = range.start_idx; i <= range.end_idx; i++)
+  {
+    if( double(samples[i].x()) > max ) max = double(samples[i].x());
+    if( double(samples[i].y()) > max ) max = double(samples[i].y());
+    if( double(samples[i].z()) > max ) max = double(samples[i].z());
+    
+    mean += (double(samples[i].x()) + double(samples[i].y()) + double(samples[i].z()))/3;
+  }
+  
+  mean /= n_pts;
+  max -= mean;
+  double step_h = mean + max/2, val = 0;
+  int interval_idx = 0;
+  for( ; interval_idx < n_intervals; interval_idx++ )
+  {
+    if (intervals[interval_idx].start_idx >= range.start_idx )
+      break;
+  }
+  
+  std::stringstream strs;
+  strs<<"plot '-' title 'x' with lines, "
+      <<"'-' title 'y' with lines, "
+      <<"'-' title 'z' with lines, "
+      <<"'-' title 'intervals' with lines"<<std::endl;
+   
+  _T base_time = samples[0].timestamp();
+  for( int i = range.start_idx; i <= range.end_idx; i++)
+    strs<<double(samples[i].timestamp() - base_time)<<" "<<double(samples[i].x())<<std::endl;
+  strs<<"EOF"<<std::endl;
+  for( int i = range.start_idx; i <= range.end_idx; i++)
+    strs<<double(samples[i].timestamp() - base_time)<<" "<<double(samples[i].y())<<std::endl;
+  strs<<"EOF"<<std::endl;
+  for( int i = range.start_idx; i <= range.end_idx; i++)
+    strs<<double(samples[i].timestamp() - base_time)<<" "<<double(samples[i].z())<<std::endl;
+  strs<<"EOF"<<std::endl;
+  
+  for( int i = range.start_idx; i <= range.end_idx; i++)
+  {
+    if( interval_idx < n_intervals)
+    {
+      if( i == intervals[interval_idx].start_idx )
+        val = step_h;
+      else if( i == intervals[interval_idx].end_idx)
+      {
+        val = 0;
+        interval_idx++;
+      }
+    }
+    strs<<double(samples[i].timestamp() - base_time)<<" "<<val<<std::endl;
+  }
+  strs<<"EOF"<<std::endl;
+  
+  plot_impl_ptr_->write( strs.str() );
+}
+
+void imu_tk::waitForKey()
+{
+  do
+  {
+    std::cout<<std::endl<<"Press Enter to continue"<<std::endl;
+  }
+  while ( getchar() != '\n' );  
+}
+
 
 class imu_tk::Visualizer
 {
@@ -41,94 +170,14 @@ private:
   boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer_;
 };
 
-imu_tk::VisualizerPtr imu_tk::createVisualizer(const std::string win_name)
+VisualizerPtr imu_tk::createVisualizer(const std::string win_name)
 {
-  return imu_tk::VisualizerPtr( new imu_tk::Visualizer( win_name ) );
-
+  return VisualizerPtr( new Visualizer( win_name ) );
 }
 
-void imu_tk::waitForKey()
-{
-  while (getchar()!='\n');  
-}
 
 template <typename _T> 
-  void imu_tk::plotSamples ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<_T> >& samples, 
-                             imu_tk::DataInterval range )
-{
-  range = imu_tk::checkInterval( samples, range );
-  int n_pts = range.end_idx - range.start_idx + 1;;
-  std::vector<double> ts(n_pts), x(n_pts), y(n_pts), z(n_pts);
-    
-  gnuplot_resetplot(plot->getHandle());
-  gnuplot_setstyle(plot->getHandle(), "lines") ;
-  
-  _T base_time = samples[0].timestamp();
-  for( int i = range.start_idx; i <= range.end_idx; i++)
-  {
-    ts[i] = double(samples[i].timestamp() - base_time);
-    x[i] = double(samples[i].x());
-    y[i] = double(samples[i].y());
-    z[i] = double(samples[i].z());
-  }  
-
-  gnuplot_plot_xy(plot->getHandle(), ts.data(), x.data(), n_pts, "x") ;
-  gnuplot_plot_xy(plot->getHandle(), ts.data(), y.data(), n_pts, "y") ;
-  gnuplot_plot_xy(plot->getHandle(), ts.data(), z.data(), n_pts, "z") ;
-}
-
-template <typename _T> 
-  void imu_tk::plotIntervals ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<_T> >& samples, 
-                               const std::vector< imu_tk::DataInterval >& intervals,
-                               imu_tk::DataInterval range )
-{
-  range = imu_tk::checkInterval( samples, range );
-  int n_pts = range.end_idx - range.start_idx + 1, 
-              n_intervals = intervals.size();
-  std::vector<double> ts(n_pts), intervals_plot(n_pts);
-  
-  imu_tk::plotSamples<_T> (plot, samples, range );
-  double max = 0, mean = 0;
-  for( int i = range.start_idx; i <= range.end_idx; i++)
-  {
-    if( double(samples[i].x()) > max ) max = double(samples[i].x());
-    if( double(samples[i].y()) > max ) max = double(samples[i].y());
-    if( double(samples[i].z()) > max ) max = double(samples[i].z());
-    
-    mean += (double(samples[i].x()) + double(samples[i].y()) + double(samples[i].z()))/3;
-  }
-  
-  mean /= n_pts;
-  max -= mean;
-  double step_h = mean + max/2, val = 0;
-  int interval_idx = 0;
-  for( ; interval_idx < n_intervals; interval_idx++ )
-  {
-    if (intervals[interval_idx].start_idx >= range.start_idx )
-      break;
-  }
- 
-  _T base_time = samples[0].timestamp();
-  for( int i = range.start_idx; i <= range.end_idx; i++)
-  {
-    ts[i] = double(samples[i].timestamp() - base_time);
-    if( interval_idx < n_intervals)
-    {
-      if( i == intervals[interval_idx].start_idx )
-        val = step_h;
-      else if( i == intervals[interval_idx].end_idx)
-      {
-        val = 0;
-        interval_idx++;
-      }
-    }
-    intervals_plot[i] = val;
-  }
-  gnuplot_plot_xy(plot->getHandle(), ts.data(), intervals_plot.data(), n_pts, "intervals") ;
-}
-
-template <typename _T> 
-  void imu_tk::showFrame( imu_tk::VisualizerPtr vis, const _T quat[4], const _T t[4], std::string name )
+  void imu_tk::showFrame( VisualizerPtr vis, const _T quat[4], const _T t[4], std::string name )
 {
   std::string x_axes_name(name), y_axes_name(name), z_axes_name(name);
   x_axes_name += "_x";
@@ -166,7 +215,7 @@ template <typename _T>
   vis->getHandle()->addLine(pcl::PointXYZ(p0[0],p0[1],p0[2]), pcl::PointXYZ(p1[0],p1[1],p1[2]), r, g, b, name );
 }
   
-void imu_tk::blockVisualizer(imu_tk::VisualizerPtr vis, int time )
+void imu_tk::blockVisualizer( VisualizerPtr vis, int time )
 {
   if (time <= 0)
     vis->getHandle()->spin();
@@ -174,24 +223,24 @@ void imu_tk::blockVisualizer(imu_tk::VisualizerPtr vis, int time )
     vis->getHandle()->spinOnce( time );
 }
 
-template void imu_tk::plotSamples<double> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<double> >& samples, 
-                                            imu_tk::DataInterval range );
-template void imu_tk::plotSamples<float> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<float> >& samples, 
-                                           imu_tk::DataInterval range );
-template void imu_tk::plotIntervals<double> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<double> >& samples, 
-                                              const std::vector< imu_tk::DataInterval >& intervals,
-                                              imu_tk::DataInterval range );
-template void imu_tk::plotIntervals<float> ( imu_tk::PlotPtr plot, const std::vector< imu_tk::TriadData_<float> >& samples, 
-                                             const std::vector< imu_tk::DataInterval >& intervals,
-                                             imu_tk::DataInterval range );
+template void Plot::plotSamples<double> ( const std::vector< TriadData_<double> >& samples, 
+                                          DataInterval range );
+template void Plot::plotSamples<float> ( const std::vector< TriadData_<float> >& samples, 
+                                         DataInterval range );
+template void Plot::plotIntervals<double> ( const std::vector< TriadData_<double> >& samples, 
+                                            const std::vector< DataInterval >& intervals,
+                                            DataInterval range );
+template void Plot::plotIntervals<float> ( const std::vector< TriadData_<float> >& samples, 
+                                           const std::vector< DataInterval >& intervals,
+                                           DataInterval range );
 
 
-template void imu_tk::showFrame<double>( imu_tk::VisualizerPtr vis, const double quat[4], const double t[4], 
+template void imu_tk::showFrame<double>( VisualizerPtr vis, const double quat[4], const double t[4], 
                                          std::string name );
-template void imu_tk::showFrame<float>( imu_tk::VisualizerPtr vis, const float quat[4], const float t[4], 
+template void imu_tk::showFrame<float>( VisualizerPtr vis, const float quat[4], const float t[4], 
                                         std::string name );
 
 template void imu_tk::showLine<double>( VisualizerPtr vis, const double p0[4], const double p1[4], 
-                                double r, double g, double b, std::string name );
+                                        double r, double g, double b, std::string name );
 template void imu_tk::showLine<float>( VisualizerPtr vis, const float p0[4], const float p1[4], 
-                                double r, double g, double b, std::string name );
+                                       double r, double g, double b, std::string name );

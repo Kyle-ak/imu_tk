@@ -113,7 +113,7 @@ template <typename _T>
   MultiPosCalibration_<_T>::MultiPosCalibration_() :
   g_mag_(9.81),
   min_num_intervals_(12),
-  n_init_samples_(3000),
+  init_interval_duration_(_T(30.0)),
   interval_n_samples_(100),
   acc_use_means_(false),
   gyro_dt_(-1.0),
@@ -131,7 +131,8 @@ template <typename _T>
   
   int n_samps = acc_samples.size();
   
-  Eigen::Matrix<_T, 3, 1> acc_variance = dataVariance( acc_samples, DataInterval( 0, n_init_samples_) );
+  DataInterval init_static_interval = DataInterval::initialInterval( acc_samples, init_interval_duration_ );
+  Eigen::Matrix<_T, 3, 1> acc_variance = dataVariance( acc_samples, init_static_interval );
   _T norm_th = acc_variance.norm();
 
   _T min_cost = std::numeric_limits< _T >::max();
@@ -173,11 +174,6 @@ template <typename _T>
     }
     
     if( verbose_output_) cout<<"Trying calibrate... "<<endl;
-
-//     PlotPtr plot = createPlot();
-//     plotIntervals( plot, acc_samples, static_intervals );
-//     plotSamples( plot, static_samples );
-//     waitForKey();
     
     ceres::Problem problem;
     for( int i = 0; i < static_samples.size(); i++)
@@ -230,16 +226,18 @@ template <typename _T>
   
   if(verbose_output_) 
   {
-    PlotPtr plot = createPlot();
-    plotIntervals( plot, calib_acc_samples_, min_cost_static_intervals_);
-    waitForKey();
+    Plot plot;
+    plot.plotIntervals( calib_acc_samples_, min_cost_static_intervals_);
+    
     cout<<"Accelerometers calibration: Better calibration obtained using threshold multiplier "<<min_cost_th
         <<" with residual "<<min_cost<<endl
         <<acc_calib_<<endl
         <<"Accelerometers calibration: inverse scale factors:"<<endl
         <<1.0/acc_calib_.scaleX()<<endl
         <<1.0/acc_calib_.scaleY()<<endl
-        <<1.0/acc_calib_.scaleZ()<<endl;    
+        <<1.0/acc_calib_.scaleZ()<<endl;
+        
+    waitForKey();
   }
   
   return true;
@@ -264,7 +262,8 @@ template <typename _T>
   int n_static_pos = static_acc_means.size(), n_samps = gyro_samples.size();
   
   // Compute the gyroscopes biases in the (static) initialization interval
-  Eigen::Matrix<_T, 3, 1> gyro_bias = dataMean( gyro_samples, DataInterval( 0, n_init_samples_) );
+  DataInterval init_static_interval = DataInterval::initialInterval( gyro_samples, init_interval_duration_ );
+  Eigen::Matrix<_T, 3, 1> gyro_bias = dataMean( gyro_samples, init_static_interval );
   
   gyro_calib_ = CalibratedTriad_<_T>(0, 0, 0, 0, 0, 0, 
                                     1.0, 1.0, 1.0, 

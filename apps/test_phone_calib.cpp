@@ -24,7 +24,7 @@ int main(int argc, char** argv)
   
   MultiPosCalibration mp_calib;
     
-  mp_calib.setNumInitSamples(5000);
+  mp_calib.setInitStaticIntervalDuration(50.0);
   mp_calib.setGravityMagnitude(9.803);
   mp_calib.enableVerboseOutput(false);
   mp_calib.enableAccUseMeans(false);
@@ -50,9 +50,9 @@ int main(int argc, char** argv)
   extractIntervalsSamples( acc_data_test, tmp_intervals, acc_means, static_intervals, 100, true);
   
   
-  PlotPtr plot1 = createPlot(), plot2 = createPlot();
-  plotIntervals(plot1,gyro_data_test, static_intervals);
-//   plotSamples(plot1, gyro_data_test);
+  Plot plot1, plot2;
+  plot1.plotIntervals(gyro_data_test, static_intervals);
+//   plot1.plotSamples( gyro_data_test);
   
   Vector3d gyro_bias = dataMean( gyro_data_test_calib, DataInterval(100, 3000));
   CalibratedTriad bias_calib;
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
     gyro_data_test[i] = bias_calib.unbias(gyro_data_test[i]);
   
   
-//   plotSamples(plot2, gyro_data_test);
+//   plot1.plotSamples( gyro_data_test);
 //   waitForKey();
 
 

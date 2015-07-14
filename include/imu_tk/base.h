@@ -194,19 +194,20 @@ struct DataInterval
   
 private:
   
-  template <typename _T> int timeToIndex( const std::vector< TriadData_<_T> > &samples, _T ts )
+  template <typename _T> static int timeToIndex( const std::vector< TriadData_<_T> > &samples, 
+                                                 _T ts )
   {
     int idx0 = 0, idx1 = samples.size() - 1, idxm;
     while( idx1 - idx0 > 1 )
     {
       idxm = (idx1 + idx0)/2;
-      if( ts > samples[idxm] )
+      if( ts > samples[idxm].timestamp() )
         idx0 = idxm;
       else
         idx1 = idxm;
     }
     
-    if( ts - samples[idx0] < samples[idx1] - ts )
+    if( ts - samples[idx0].timestamp() < samples[idx1].timestamp() - ts )
       return idx0;
     else
       return idx1;
