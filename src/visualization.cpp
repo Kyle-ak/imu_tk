@@ -1,11 +1,54 @@
-#include <pcl/visualization/cloud_viewer.h>
+/* 
+ * imu_tk - Inertial Measurement Unit Toolkit
+ * 
+ *  Copyright (c) 2014, Alberto Pretto <pretto@diag.uniroma1.it>
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ * 
+ *  1. Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright notice,
+ *     this list of conditions and the following disclaimer in the documentation
+ *     and/or other materials provided with the distribution.
+ * 
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <limits>
 #include <ceres/rotation.h>
 
 #include "imu_tk/visualization.h"
+#include "imu_tk/vis_extra/opengl_3d_scene.h"
+
 #include <cstdio>
 #include <sstream>
 
+#include <QApplication>
+#include <QKeyEvent>
+#include <QTime>
+#include <QString>
+
+#include <boost/utility.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
+#include <boost/concept_check.hpp>
+
 using namespace imu_tk;
+
+static int tmp_argc = 1;
+static char *tmp_argv[] = { (char *)"" };
 
 class Plot::PlotImpl
 {
@@ -49,7 +92,10 @@ template <typename _T>
                                    DataInterval range )
 {
   if( !plot_impl_ptr_->ready() )
+  {
+    std::cerr<<"WARNING : can't plot samples: check that gnuplot is installed in your system!"<<std::endl;
     return;
+  }
   
   range = checkInterval( samples, range );
   
@@ -76,8 +122,11 @@ template <typename _T>
                                      const std::vector< DataInterval >& intervals, 
                                      DataInterval range )
 {
-   if( !plot_impl_ptr_->ready() )
+  if( !plot_impl_ptr_->ready() )
+  {
+    std::cerr<<"WARNING : can't plot samples: check that gnuplot is installed in your system!"<<std::endl;
     return;
+  }
    
   range = checkInterval( samples, range );
   int n_pts = range.end_idx - range.start_idx + 1, 
@@ -148,79 +197,115 @@ void imu_tk::waitForKey()
   while ( getchar() != '\n' );  
 }
 
-
-class imu_tk::Visualizer
+class Vis3D::VisualizerImpl : public OpenGL3DScene
 {
-public:
-  Visualizer( const std::string win_name )
-  {
-    viewer_ = boost::shared_ptr<pcl::visualization::PCLVisualizer>(
-                 new pcl::visualization::PCLVisualizer ( win_name ));
-    viewer_->setBackgroundColor (0,0,0);
-    viewer_->initCameraParameters ();    
-    viewer_->spinOnce();
+public  :
+  VisualizerImpl( QWidget * parent = 0, Qt::WindowFlags f = 0 ) :
+    waiting_for_key(false)
+  { 
+    if ( !QApplication::instance() )
+    {
+      new QApplication( tmp_argc, tmp_argv );
+    }
+
+    moveToThread(QApplication::instance()->thread());
+
+    setAutoAdjust(false);
+    setFirstPersonView(false);
+    moveCamera(-1.5f, -1.5f, 0.5f, 90.0f, -45.0f,0.0f);
+    setCameraIncrements(0.1,2.0);
+    resize( 640,480 );
+    show();
+    
   };
+  ~VisualizerImpl() {};
+  // TODO Ugly workaround
+  bool waiting_for_key;
   
-  boost::shared_ptr<pcl::visualization::PCLVisualizer>& getHandle() 
+protected:
+
+  virtual void keyPressEvent ( QKeyEvent * event )
   {
-    return viewer_; 
+    OpenGL3DScene::keyPressEvent ( event );
+    if( event->key() == Qt::Key_Escape )
+      waiting_for_key = false;
   };
-  
-private:
-  boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer_;
 };
 
-VisualizerPtr imu_tk::createVisualizer(const std::string win_name)
+
+Vis3D::Vis3D ( const std::string win_name )
 {
-  return VisualizerPtr( new Visualizer( win_name ) );
+  vis_impl_ptr_ = boost::shared_ptr< VisualizerImpl > ( new VisualizerImpl() );
+  QString w_name( win_name.c_str() );
+  w_name += " - press h for help";
+  vis_impl_ptr_->setWindowTitle(w_name);
 }
 
+void Vis3D::registerFrame( std::string name, uint8_t r, uint8_t g, uint8_t b )
+{
+  vis_impl_ptr_->registerAxes(name, QColor(r,g,b) );
+}
+
+void Vis3D::unregisterFrame( std::string name )
+{
+  vis_impl_ptr_->unregisterAxes(name);
+}
+    
+template <typename _T> 
+  void Vis3D::setFramePos( std::string name, const _T quat[4], const _T t[3] )
+{
+  Eigen::Vector4d q_vec;
+  Eigen::Vector3d r_vec, t_vec;
+  q_vec<<quat[0], quat[1], quat[2], quat[3];
+  t_vec<<t[0], t[1], t[2];
+  ceres::QuaternionToAngleAxis( q_vec.data(), r_vec.data() );
+  vis_impl_ptr_->setAxesPos(name, r_vec, t_vec );
+}
+
+
+void Vis3D::registerLine( std::string name, uint8_t r, uint8_t g, uint8_t b )
+{
+  vis_impl_ptr_->registerLine(name, QColor(r,g,b));
+}
+
+void Vis3D::unregisterLine( std::string name )
+{
+  vis_impl_ptr_->unregisterLine(name);
+}
 
 template <typename _T> 
-  void imu_tk::showFrame( VisualizerPtr vis, const _T quat[4], const _T t[4], std::string name )
+  void Vis3D::setLinePos( std::string name, const _T p0[3], const _T p1[3] )
 {
-  std::string x_axes_name(name), y_axes_name(name), z_axes_name(name);
-  x_axes_name += "_x";
-  y_axes_name += "_y";
-  z_axes_name += "_z";
-  
-  _T x_axes_init[3] = {1,0,0}, 
-     y_axes_init[3] = {0,1,0}, 
-     z_axes_init[3] = {0,0,1}, 
-     x_axes[3], y_axes[3], z_axes[3];
-  
-  ceres::QuaternionRotatePoint(quat, x_axes_init, x_axes);
-  ceres::QuaternionRotatePoint(quat, y_axes_init, y_axes);
-  ceres::QuaternionRotatePoint(quat, z_axes_init, z_axes);
-  
-  vis->getHandle()->removeShape(x_axes_name);
-  vis->getHandle()->removeShape(y_axes_name);
-  vis->getHandle()->removeShape(z_axes_name);
-  vis->getHandle()->removeText3D(name);
-  
-  vis->getHandle()->addLine(pcl::PointXYZ(t[0],t[1],t[2]), 
-                            pcl::PointXYZ(t[0] + x_axes[0], t[1] + x_axes[1], t[2] + x_axes[2]), 1, 0, 0, x_axes_name);
-  vis->getHandle()->addLine(pcl::PointXYZ(t[0],t[1],t[2]), 
-                            pcl::PointXYZ(t[0] + y_axes[0], t[1] + y_axes[1], t[2] + y_axes[2]), 0, 1, 0, y_axes_name);
-  vis->getHandle()->addLine(pcl::PointXYZ(t[0],t[1],t[2]), 
-                            pcl::PointXYZ(t[0] + z_axes[0], t[1] + z_axes[1], t[2] + z_axes[2]), 0, 0, 1, z_axes_name);
-  
-  vis->getHandle()->addText3D (name, pcl::PointXYZ(t[0],t[1],t[2]), 0.2 );
+  Eigen::Vector3d p0_vec, p1_vec;
+  p0_vec<<p0[0], p0[1], p0[2];
+  p1_vec<<p1[0], p1[1], p1[2];
+
+  vis_impl_ptr_->setLine(name, p0_vec, p1_vec);
 }
 
-template <typename _T> 
-  void imu_tk::showLine( VisualizerPtr vis, const _T p0[4], const _T p1[4], double r, double g, double b, std::string name )
+void Vis3D::updateAndWait( int delay_ms )
 {
-  vis->getHandle()->removeShape(name);
-  vis->getHandle()->addLine(pcl::PointXYZ(p0[0],p0[1],p0[2]), pcl::PointXYZ(p1[0],p1[1],p1[2]), r, g, b, name );
-}
+  vis_impl_ptr_->waiting_for_key = true;
+  QTime time;
   
-void imu_tk::blockVisualizer( VisualizerPtr vis, int time )
-{
-  if (time <= 0)
-    vis->getHandle()->spin();
-  else
-    vis->getHandle()->spinOnce( time );
+  if( delay_ms > 0 )
+    time.start();
+  
+  while( vis_impl_ptr_->waiting_for_key )
+  {
+    if ( !QApplication::instance() )
+    {
+      new QApplication( tmp_argc, tmp_argv );
+    }
+    vis_impl_ptr_->updateNow();
+    QApplication::instance()->processEvents();
+      
+    usleep(1000);
+    
+    // TODO Improve here using a timer
+    if( delay_ms > 0 && time.elapsed() > delay_ms )
+      vis_impl_ptr_->waiting_for_key = false;
+  }
 }
 
 template void Plot::plotSamples<double> ( const std::vector< TriadData_<double> >& samples, 
@@ -234,13 +319,7 @@ template void Plot::plotIntervals<float> ( const std::vector< TriadData_<float> 
                                            const std::vector< DataInterval >& intervals,
                                            DataInterval range );
 
-
-template void imu_tk::showFrame<double>( VisualizerPtr vis, const double quat[4], const double t[4], 
-                                         std::string name );
-template void imu_tk::showFrame<float>( VisualizerPtr vis, const float quat[4], const float t[4], 
-                                        std::string name );
-
-template void imu_tk::showLine<double>( VisualizerPtr vis, const double p0[4], const double p1[4], 
-                                        double r, double g, double b, std::string name );
-template void imu_tk::showLine<float>( VisualizerPtr vis, const float p0[4], const float p1[4], 
-                                       double r, double g, double b, std::string name );
+template void Vis3D::setFramePos<double>( std::string name, const double quat[4], const double t[3] );
+template void Vis3D::setFramePos<float>( std::string name, const float quat[4], const float t[3] );
+template void Vis3D::setLinePos<double>( std::string name, const double p0[3], const double p1[3] );
+template void Vis3D::setLinePos<float>( std::string name, const float p0[3], const float p1[3] );

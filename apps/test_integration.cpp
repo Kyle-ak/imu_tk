@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <QApplication>
+
 #include "imu_tk/io_utils.h"
 #include "imu_tk/calibration.h"
 #include "imu_tk/filters.h"
@@ -15,6 +17,8 @@ int main(int argc, char** argv)
   if( argc < 2 )
     return -1;
 
+  QApplication app(argc, argv);
+  
   vector< TriadData > acc_data, gyro_data, mag_data;
   
   cout<<"Importing IMU data from file : "<< argv[1]<<endl;  
@@ -30,25 +34,41 @@ int main(int argc, char** argv)
 
   Vector3d mag_mean = dataMean( mag_data, DataInterval(100, 3000));
   
-  VisualizerPtr vis = createVisualizer();
+  Vis3D vis;
   
   Eigen::Vector4d quat(1.0, 0, 0, 0); // Identity quaternion
   double t[3] = {0, 0, 0};
-  showFrame(vis, quat.data(), t, "ref");
-  showLine(vis, t, mag_mean.data(), 1,1,1, "init_mag");
+  vis.registerFrame("ref");
+  vis.registerFrame("cur", 255, 0, 0);
+  vis.registerLine( "init_mag" );
+  vis.registerLine( "mag" );
+  
+  vis.setFramePos( "ref", quat.data(), t );
+  vis.setLinePos( "init_mag", t, mag_mean.data() );
   
   for(int i = 3000; i < gyro_data.size() - 1; i++)
   {
-    if( !(i%100) )
-      std::cout<<i/100<<std::endl;
     double dt = gyro_data[i+1].timestamp() - gyro_data[i].timestamp();
     
     quatIntegrationStepRK4( quat, gyro_data[i].data(), gyro_data[i + 1].data(), dt, quat );
-    showFrame(vis, quat.data(), t, "cur");
-    showLine( vis, t, mag_data[i].data().data(), 1, 1, 1, "mag" );
-    blockVisualizer(vis, 10);
+    vis.setFramePos( "cur", quat.data(), t );
+    //vis.setLinePos( "mag", t, mag_data[i].data().data() );
+    
+    if( !(i%100) )
+    {
+      std::cout<<i/100<<std::endl;
+    }
+    vis.updateAndWait(1);
   }
   std::cout<<"Done"<<std::endl;
-  blockVisualizer(vis);
+  //blockVisualizer(vis);
+  //return app.exec();
+//   while( true )
+//   {
+//     app.processEvents();
+//   }
+  //waitForKey();
+  vis.updateAndWait();
+  //return app.exec();  
   return 0;
 }

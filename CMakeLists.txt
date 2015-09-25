@@ -16,62 +16,70 @@ message("${CMAKE_CXX_FLAGS_RELEASE}")
 find_package(Boost REQUIRED)  
 find_package(Eigen3 REQUIRED)
 find_package(Ceres REQUIRED)
-find_package(PCL 1.6 REQUIRED)
-add_definitions(${PCL_DEFINITIONS})
-
-set (IMU_TK_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)
-set (IMU_TK_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib PARENT_SCOPE)
-set (IMU_TK_LIBS imu_tk PARENT_SCOPE)
 
 include_directories(./include
                     /usr/include
                     ${Boost_INCLUDE_DIRS}
                     ${EIGEN_INCLUDE_DIR}
-                    ${CERES_INCLUDE_DIRS}
-                    ${PCL_INCLUDE_DIRS})
+                    ${CERES_INCLUDE_DIRS})
 
-                   
-aux_source_directory( src IMU_TK_SRC )
+#Vis3D
+find_package(Qt4 COMPONENTS QtCore QtGui QtOpenGL REQUIRED )
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
 
-add_library(imu_tk STATIC ${IMU_TK_SRC})
-target_link_libraries( imu_tk ${PCL_LIBRARIES} )
+include_directories( ${OPENGL_INCLUDE_DIRS}  
+                     ${GLUT_INCLUDE_DIRS}
+                     ${CMAKE_CURRENT_BINARY_DIR} )
+                     
+set(IMU_TK_VIS_EXTRA_SOURCES 
+    ./src/vis_extra/gl_camera.cpp 
+    ./src/vis_extra/opengl_3d_scene.cpp )
+set(IMU_TK_VIS_EXTRA_HEADERS
+    ./include/imu_tk/vis_extra/opengl_3d_scene.h )
+    
+qt4_wrap_cpp(IMU_TK_VIS_EXTRA_HEADERS_MOC ${IMU_TK_VIS_EXTRA_HEADERS})
+
+include(${QT_USE_FILE})
+add_definitions(${QT_DEFINITIONS})
+
+aux_source_directory( ./src IMU_TK_CORE_SRC )
+set( IMU_TK_SRC ${IMU_TK_CORE_SRC} ${IMU_TK_VIS_EXTRA_HEADERS_MOC} ${IMU_TK_VIS_EXTRA_SOURCES} )
+
+add_library(imu_tk ${IMU_TK_SRC})
 set_target_properties(imu_tk PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+
+set (IMU_TK_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE STRING "imu_tk include directories")
+set (IMU_TK_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib CACHE STRING "imu_tk libraries directories")
+set (IMU_TK_LIBS imu_tk ${CERES_LIBRARIES} ${QT_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} 
+     CACHE STRING "imu_tk libraries")
+
+message( "${IMU_TK_LIBS}" )
 
 if( BUILD_IMU_TK_EXAMPLES )
 
 add_executable(test_imu_calib apps/test_imu_calib.cpp)
-target_link_libraries( test_imu_calib
-                       imu_tk
-                       ${CERES_LIBRARIES})
+target_link_libraries( test_imu_calib ${IMU_TK_LIBS})
                        
 set_target_properties( test_imu_calib PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 add_executable(test_phone_calib apps/test_phone_calib.cpp)
-target_link_libraries( test_phone_calib
-                       imu_tk
-                       ${CERES_LIBRARIES})
+target_link_libraries( test_phone_calib ${IMU_TK_LIBS})
                        
 set_target_properties( test_phone_calib PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
-
 add_executable(test_imu_calib2 apps/test_imu_calib2.cpp)
-target_link_libraries( test_imu_calib2
-                       imu_tk
-                       ${CERES_LIBRARIES})
+target_link_libraries( test_imu_calib2 ${IMU_TK_LIBS})
                        
 set_target_properties( test_imu_calib2 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 add_executable(test_imu_calib3 apps/test_imu_calib3.cpp)
-target_link_libraries( test_imu_calib3
-                       imu_tk
-                       ${CERES_LIBRARIES})
+target_link_libraries( test_imu_calib3 ${IMU_TK_LIBS})
                        
 set_target_properties( test_imu_calib3 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 add_executable(test_integration apps/test_integration.cpp)
-target_link_libraries( test_integration
-                       imu_tk
-                       ${CERES_LIBRARIES})
+target_link_libraries( test_integration ${IMU_TK_LIBS})
                        
 set_target_properties( test_integration PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
