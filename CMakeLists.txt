@@ -3,15 +3,13 @@ project(imu_tk)
 cmake_minimum_required (VERSION 2.8) 
 cmake_policy(SET CMP0015 NEW)
 
-if(NOT DEFINED CMAKE_BUILD_TYPE)
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
   set(CMAKE_BUILD_TYPE "Release")
-endif(NOT DEFINED CMAKE_BUILD_TYPE) 
+endif()
 
 if(NOT DEFINED BUILD_IMU_TK_EXAMPLES)
   set(BUILD_IMU_TK_EXAMPLES "ON")
 endif(NOT DEFINED BUILD_IMU_TK_EXAMPLES)
-
-message("${CMAKE_CXX_FLAGS_RELEASE}")
 
 find_package(Boost REQUIRED)  
 find_package(Eigen3 REQUIRED)
@@ -60,23 +58,8 @@ if( BUILD_IMU_TK_EXAMPLES )
 
 add_executable(test_imu_calib apps/test_imu_calib.cpp)
 target_link_libraries( test_imu_calib ${IMU_TK_LIBS})
-                       
 set_target_properties( test_imu_calib PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
-add_executable(test_phone_calib apps/test_phone_calib.cpp)
-target_link_libraries( test_phone_calib ${IMU_TK_LIBS})
-                       
-set_target_properties( test_phone_calib PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
-
-add_executable(test_imu_calib2 apps/test_imu_calib2.cpp)
-target_link_libraries( test_imu_calib2 ${IMU_TK_LIBS})
-                       
-set_target_properties( test_imu_calib2 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
-
-add_executable(test_imu_calib3 apps/test_imu_calib3.cpp)
-target_link_libraries( test_imu_calib3 ${IMU_TK_LIBS})
-                       
-set_target_properties( test_imu_calib3 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 add_executable(test_integration apps/test_integration.cpp)
 target_link_libraries( test_integration ${IMU_TK_LIBS})
