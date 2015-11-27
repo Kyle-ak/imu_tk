@@ -52,23 +52,18 @@ int main(int argc, char** argv)
     
     quatIntegrationStepRK4( quat, gyro_data[i].data(), gyro_data[i + 1].data(), dt, quat );
     vis.setFramePos( "cur", quat.data(), t );
-    //vis.setLinePos( "mag", t, mag_data[i].data().data() );
     
     if( !(i%100) )
     {
       std::cout<<i/100<<std::endl;
     }
-    vis.updateAndWait(1);
+    if( !(i%5) )
+    {
+      vis.updateAndWait(1);
+    }
   }
+
   std::cout<<"Done"<<std::endl;
-  //blockVisualizer(vis);
-  //return app.exec();
-//   while( true )
-//   {
-//     app.processEvents();
-//   }
-  //waitForKey();
   vis.updateAndWait();
-  //return app.exec();  
   return 0;
 }
