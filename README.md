@@ -46,6 +46,41 @@ A. Pretto and G. Grisetti Calibration and performance evaluation of low-cost IMU
 IMU-TK is licensed under the BSD License.
 IMU-TK is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the licenses for more details.
 
+## Requirements ##
+
+The code is tested on Ubuntu 14.04. IMU-TK requires the following tools and libraries: CMake, Eigen3, Ceres Solver, OpenGL, QT and Gnuplot. To install these required packages on Ubuntu, use the terminal command:
+
+
+```
+#!bash
+
+sudo apt-get install build-essential cmake libeigen3-dev libqt4-dev libqt4-opengl-dev freeglut3-dev gnuplot
+```
+and follow this [guide](http://ceres-solver.org/building.html) to install Ceres Solver.
+
+## Building ##
+
+To build IMU-TK on Ubuntu, type in a terminal the following command sequence.
+
+```
+#!bash
+
+cd imu_tk
+mkdir build
+cd build
+cmake  ..
+make
+
+```
+Test the library with the **test_imu_calib** app (binary in /bin, source code in src/test_imu_calib.cpp): **test_imu_calib** performs an IMU calibration given the data included in bin/test_data/:
+
+```
+#!bash
+
+./test_imu_calib test_data/xsens_acc.mat test_data/xsens_gyro.mat
+
+```
+
 ## Contact information ##
 
 Alberto Pretto <pretto@dis.uniroma1.it>
