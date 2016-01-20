@@ -83,4 +83,4 @@ Test the library with the **test_imu_calib** app (binary in /bin, source code in
 
 ## Contact information ##
 
-Alberto Pretto <pretto@dis.uniroma1.it>
+Alberto Pretto [pretto@dis.uniroma1.it](mailto:pretto@dis.uniroma1.it)
