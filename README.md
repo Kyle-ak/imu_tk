@@ -7,7 +7,7 @@ IMU-TK implements a multi-position calibration method that does not require any 
 
 Papers Describing the Approach:
 
-D. Tedaldi, A. Pretto and E. Menegatti A Robust and Easy to Implement Method for IMU Calibration without External Equipments In: Proceedings of the IEEE International Conference on Robotics and Automation (ICRA 2014), May 31 - June 7, 2014 Hong Kong, China, Page(s): 3042 - 3049 ([PDF](http://www.dis.uniroma1.it/~pretto/papers/tpm_icra2014.pdf))
+D. Tedaldi, A. Pretto and E. Menegatti, "A Robust and Easy to Implement Method for IMU Calibration without External Equipments". In: Proceedings of the IEEE International Conference on Robotics and Automation (ICRA 2014), May 31 - June 7, 2014 Hong Kong, China, Page(s): 3042 - 3049 ([PDF](http://www.dis.uniroma1.it/~pretto/papers/tpm_icra2014.pdf))
 
 
 ```
@@ -26,7 +26,7 @@ D. Tedaldi, A. Pretto and E. Menegatti A Robust and Easy to Implement Method for
 
 
 
-A. Pretto and G. Grisetti Calibration and performance evaluation of low-cost IMUs In Proceedings of the 20th IMEKO TC4 International Symposium, Sep. 15 - 17, 2014 Benevento, Italy, pages: 429 - 434 ([PDF](http://www.dis.uniroma1.it/~pretto/papers/pg_imeko2014.pdf))
+A. Pretto and G. Grisetti, "Calibration and performance evaluation of low-cost IMUs". In Proceedings of the 20th IMEKO TC4 International Symposium, Sep. 15 - 17, 2014 Benevento, Italy, pages: 429 - 434 ([PDF](http://www.dis.uniroma1.it/~pretto/papers/pg_imeko2014.pdf))
 
 
 ```
