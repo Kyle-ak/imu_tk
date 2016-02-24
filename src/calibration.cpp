@@ -104,7 +104,7 @@ template <typename _T1> struct MultiPosGyroResidual
     Eigen::Matrix< _T2, 3 , 3> rot_mat;
     integrateGyroInterval( calib_gyro_samples, rot_mat, _T2(dt_) );
     
-    Eigen::Matrix< _T2, 3 , 1> diff = rot_mat.inverse()*g_versor_pos0_.template cast<_T2>() - 
+    Eigen::Matrix< _T2, 3 , 1> diff = rot_mat.transpose()*g_versor_pos0_.template cast<_T2>() -
                                       g_versor_pos1_.template cast<_T2>();
     
     residuals[0] = diff(0);
