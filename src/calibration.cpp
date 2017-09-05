@@ -223,7 +223,7 @@ template <typename _T>
     {
       min_cost = summary.final_cost;
       min_cost_th = th_mult;
-      min_cost_static_intervals_ = static_intervals;
+      min_cost_static_intervals_ = extracted_intervals;
       min_cost_calib_params = acc_calib_params;
     }
     cout<<"residual "<<summary.final_cost<<endl;
