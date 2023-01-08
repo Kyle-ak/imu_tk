@@ -58,6 +58,13 @@ sudo apt-get install build-essential cmake libeigen3-dev libqt4-dev libqt4-openg
 ```
 and follow this [guide](http://ceres-solver.org/building.html) to install Ceres Solver.
 
+ *Note:* On ubuntu 20.04, libqt4-dev is not included by default. Add the following source to the system to install it:
+ 
+ ```
+ #!bash
+ sudo add-apt-repository ppa:rock-core/qt4
+ ```
+
 ## Building ##
 
 To build IMU-TK on Ubuntu, type in a terminal the following command sequence.
