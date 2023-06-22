@@ -87,6 +87,23 @@ Test the library with the **test_imu_calib** app (binary in /bin, source code in
 ./test_imu_calib test_data/xsens_acc.mat test_data/xsens_gyro.mat
 
 ```
+## Docker Workflow
+
+To simplify the installation process, IMU-TK provides a Docker workflow. Instead of installing the package locally, you can follow these steps to use IMU-TK within a Docker container.
+
+1. Build the Docker image by running the following command in the terminal:
+```bash
+docker build -t <image-name> .
+```
+Replace `<image-name>` with the desired name for your Docker image.
+
+2. Launch the Docker container with GUI support using the provided shell script `docker_start`. Execute the following command:
+```bash
+./docker_start <image-name>
+```
+This will start the Docker container and enable GUI support. The script will mount the directory where it is executed to the `/home/imu_tk/host` directory within the container.
+
+**Note:** The `docker_start` shell script allows X11 server connections to enable GUI support. It's important to note that enabling X11 server connections may be considered a security risk. If you don't require GUI support, you can comment out the corresponding `xhost` commands from the `docker_start` script.
 
 ## Contact information ##
 
