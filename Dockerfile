@@ -1,8 +1,5 @@
 FROM ubuntu:18.04
 
-# Another option is to use the prebuilt Ceres image instead of compiling from scratch
-# FROM robocaster/ceres:18.04
-
 # Packages required for Installing Ceres
 RUN apt-get update && apt-get install build-essential libboost-dev cmake libgoogle-glog-dev libgflags-dev libatlas-base-dev libeigen3-dev wget -y
 
